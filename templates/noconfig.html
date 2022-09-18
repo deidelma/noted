@@ -1,0 +1,19 @@
+{% extends "base.html" %} 
+{% block title %}Missing configuration{% endblock %} 
+{% block head %} {% endblock %} 
+{% block content %}
+<br class="container">
+    {% if config_found == True %}
+        Config found:
+    {% else %}
+        No config file found
+    {% endif %}
+    <h2>Missing configuration file</h2>
+    <br/>
+    <p class="lead">
+        No configuration has been provided.  Please run the configuration program to 
+        create <em>~/.config/dred.json</em>.
+    </p>
+    <br/>
+</div>
+{% endblock %}

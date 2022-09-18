@@ -1,0 +1,178 @@
+{{ template "base" "Note Editor"}}
+<div id="content" class="container">
+    <h2 id="pageTitle">Edit a Note</h2>
+    <div
+            id="container"
+            style="width: 800px; height: 700px; border: 1px solid grey"
+    ></div>
+    <button class="btn btn-primary" onclick="doStore();">Store</button>
+    <div id="links-display"></div>
+</div>
+
+<script src="/static/js/loader.js"></script>
+<script src="/static/js/editor.main.nls.js"></script>
+<script src="/static/js/editor.main.js"></script>
+<script src="/static/js/monaco-markdown.js"></script>
+<!-- $post("http://") -->
+<!--suppress JSUnresolvedFunction -->
+<script type="application/javascript">
+    let editor = monaco.editor.create(document.getElementById("container"), {
+        language: "markdown-math",
+        value: "",
+        minimap: {
+            enabled: false,
+        },
+        fontSize: 16,
+        // theme: "vs-dark",
+        theme: "default",
+    });
+    require(["MonacoMarkdown"], function (MonacoMarkdown) {
+        let extension = new MonacoMarkdown.MonacoMarkdownExtension();
+        extension.activate(editor);
+    });
+
+    // store the file on the disk
+    const doStore = function () {
+        let text = editor.getValue();
+        let data = {text: text, filename: window.sessionStorage.getItem("filename")};
+        console.log(data);
+        $.post(`${SERVER_URL}/api/store/`, data, function (data) {
+            console.log("Received store" + data);
+            let result = String(data.result);
+            if (!result.startsWith("success")) {
+                alert(result);
+            } else {
+                console.log("successfully stored " + text.length);
+            }
+        });
+    };
+
+    // manage the state of the editor's text
+    const update_text = (evt) => {
+        let changed = String(evt.changes[0].text);
+        let current_text = editor.getValue();
+        let deleted =
+            current_text.length < window.sessionStorage.getItem("editor_text").length;
+        window.sessionStorage.setItem("editor_text", current_text);
+        let title = document.getElementById("pageTitle");
+        if (changed.startsWith("\n") || deleted) {
+            doStore();
+            let newTitle = window.sessionStorage.getItem("filename");
+            console.log("new title:" + newTitle);
+            title.innerHTML = `<span style="font-size:small">${newTitle}</style>`;
+        } else {
+            let newTitle = window.sessionStorage.getItem("filename") + " *";
+            console.log("new title:" + newTitle);
+            title.innerHTML = `<span style="font-size:small">${newTitle}</style>`;
+        }
+    };
+
+    // save when a new line is entered
+    editor.getModel().onDidChangeContent(function (evt) {
+        update_text(evt);
+        // console.log(JSON.stringify(evt.changes[0].text, null, "\t"));
+    });
+
+    // make sure to save before leaving the page
+    window.onbeforeunload = function () {
+        doStore();
+        window.sessionStorage.removeItem("editor_text");
+    };
+
+    // create a link based on the filename
+    const createNoteLink = function (filename) {
+        // return `<a  href='${SERVER_URL}/editor?filename=${filename}'>${filename}</a>`;
+        return `<a  href='#' onclick=displayNote(${filename})>${filename}</a>`;
+    };
+
+    const doFindNotes = function (stem) {
+        // call server to find the notes in the database that match the stem
+
+        data = {search_string: stem};
+        $.post(`${SERVER_URL}/api/findFilesInDatabase/`, data, function (data) {
+            let e = document.getElementById("links-display");
+            console.log(`Received: ${data}`);
+            console.log(typeof data);
+            let keys = Object.keys(data);
+            console.log(`${typeof keys} ${keys.length}`);
+            let lines = [`<div><br/>Found ${keys.length} notes<br/>`];
+            lines.push("<ul class='list-group'>");
+            for (let i = 0; i < keys.length; i++) {
+                console.log(String(data[keys[i]]).trim());
+                let link = createNoteLink(String(data[keys[i]]).trim());
+                lines.push(`<li class="list-group-item">${link}</li>`);
+            }
+            lines.push("</ul></di>");
+
+            e.innerHTML = lines.join("\n");
+            // window.sessionStorage.setItem("last_search", lines.join("\n"));
+            closeNewNoteFormDiv();
+        });
+        // window.location.href = `${SERVER_URL}/editor?filename=${filename}`
+    };
+
+    // open a new window showing the new file
+    const displayNote = (filename) => {
+        alert("about to open: " + filename + " in a new window");
+    };
+
+    // display links to files in the database with names that start like the prefix of filename
+    const displayLinks = () => {
+        let filepath = window.sessionStorage.getItem("filename");
+        // const filename_re = /^(.*[\/\\])*([a-zA-Z]+)(\-\d+)*\.md/;
+        const filename_re = /^(.*[\/\\])*([a-zA-Z]+)(-\d+)*/;
+        let items = filepath.match(filename_re);
+        // alert("item 0 " + items[0]);
+        // alert("item 1 " + items[1]);
+        // alert("item 2 " + items[2]);
+        // alert("item 3 " + items[3]);
+
+        // stem_re = /^(.+)[\-\.]/gm;
+        let stem = items[2];
+        alert("displayLinks stem: " + stem);
+    };
+
+    const handleLink = (e) => {
+        alert(`link: ${e}`);
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+        window.sessionStorage.setItem("editor_text", "");
+        let filename = GetURLParameter("filename");
+        let title = document.getElementById("pageTitle");
+        $.post(
+            `${SERVER_URL}/api/fullPath/`,
+            {filename: filename},
+            function (data) {
+                filename = String(data.path);
+                console.log("get full path: " + filename);
+            }
+        );
+        data = {filename: filename};
+        console.log("about to load: " + filename);
+        $.post(`${SERVER_URL}/api/get/`, data, function (data) {
+            let text = String(data.text);
+            if (text.startsWith("ERROR")) {
+                console.log("server reports an error while loading: " + filename);
+                window.sessionStorage.setItem("filename", "");
+                title.innerHTML = `<span style="font-size:small; color:red">Unable to find ${filename}</span>`;
+                editor.updateOptions({readOnly: true});
+            } else {
+                console.log(
+                    "successfully loaded " +
+                    filename +
+                    " (" +
+                    String(data.text).length +
+                    ")"
+                );
+                title.innerHTML = `<span style="font-size:small">${filename}</style>`;
+                window.sessionStorage.setItem("filename", filename);
+                editor.getModel().setValue(String(data.text));
+                editor.updateOptions({readOnly: false});
+                //displayLinks();
+            }
+        });
+        console.log("completed event listener");
+    });
+</script>
+{{ template "footer" }}
