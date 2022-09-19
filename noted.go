@@ -45,16 +45,19 @@ func main() {
 		})
 	})
 
-	type NoteRecord struct {
-		Title string
-	}
-
-	type NotesRecord struct {
-		Data []NoteRecord
-	}
+	r.GET("/about", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "about.gohtml", gin.H{
+			"content": "This is the about page for Noted...",
+		})
+	})
 
 	r.GET("/api/list", func(c *gin.Context) {
 		jsonData := []byte(`{"notes":"bob-20220902.md,bill-20220909.md"}`)
+		c.Data(http.StatusOK, "application/json", jsonData)
+	})
+
+	r.GET("/api/updateDatabase", func(c *gin.Context) {
+		jsonData := []byte(`{"result": "success", "count": 0}`)
 		c.Data(http.StatusOK, "application/json", jsonData)
 	})
 	err := r.Run("localhost:5823")
