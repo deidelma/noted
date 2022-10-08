@@ -22,3 +22,4 @@ go.work
 .idea/modules.xml
 .idea/noted.iml
 /.idea/vcs.xml
+/node_modules/
