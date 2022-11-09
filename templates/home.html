@@ -1,0 +1,280 @@
+{% extends "base.html" %} {% block title %}Main Page{% endblock %} {% block
+content %} {% if config_found == False %}
+<script>
+  window.addEventListener("load", function () {
+    window.location.replace(`${SERVER_URL}/noconfig`);
+  });
+</script>
+{% endif %}
+
+<h2>DRED Note Taking System</h2>
+<div>
+  <button class="btn btn-primary" onclick="doNewNote()">New Note</button>
+  <button class="btn btn-primary" onclick="doFindNoteOnDisk()">
+    Find Note on Disk
+  </button>
+  <button class="btn btn-primary" onclick="doFindNoteInDatabase()">
+    Find Note in Database
+  </button>
+  <button class="btn btn-primary" onclick="doUpdateDatabase()">
+    Update Database
+  </button>
+  <div id="newNoteForm" class="container" style="visibility: hidden"></div>
+  <div id="noteListDiv" class="container"></div>
+</div>
+<script type="application/javascript">
+  const newNoteText = `
+  <br/>
+  <form action="">
+        <div class="form-group">
+            <label for="filenameInput" id="filenameLabel">Filename</label>
+            <input type="text" class="form-control" id="filenameInput">
+            <small id="filenameHelp" class="form-text text-muted">Required. Should be in the form: name-yymmdd.md</small>
+        </div>
+        <div class="form-group">
+            <label for="keywordsInput">Keywords</label>
+            <input type="text" class="form-control" id="keywordsInput">
+        </div>
+        <div class="form-group">
+            <label for="presentInput">Present</label>
+            <input type="text" class="form-control" id="presentInput">
+        </div>
+        <div class="form-group">
+            <label for="speakersInput">Speakers</label>
+            <input type="text" class="form-control" id="speakersInput">
+        </div>
+    </form>
+    <div class="container" aria-label="Note buttons">
+        <button type="button" class="btn btn-primary" onclick="doCreateNote()">CreateNote</button>
+        <button type="button" class="btn btn-light" onclick="doCancelNote()">Cancel</button>
+   </div>
+  `;
+  const findNoteText = `
+  <br/>
+  <form action="">
+        <div class="form-group">
+            <label for="filenameInput" id="filenameLabel">Filename</label>
+            <input type="text" class="form-control" id="filenameInput">
+            <small id="filenameHelp" class="form-text text-muted">Required</small>
+        </div>
+    <div aria-label="Note buttons">
+        <button type="button" class="btn btn-primary" onclick="doFindFiles()">Load</button>
+   </div>
+  `;
+  const findNoteInDatabaseText = `
+  <br/>
+  <form action="">
+        <div class="form-group">
+            <label for="filenameInput" id="filenameLabel">Filename</label>
+            <input type="text" class="form-control" id="filenameInput">
+            <small id="filenameHelp" class="form-text text-muted">Required</small>
+        </div>
+    <div aria-label="Note buttons">
+        <button type="button" class="btn btn-primary" onclick="doFindDatabaseEntries()">Load</button>
+   </div>
+  `;
+
+  // resets page to base line appearance
+  const closeNewNoteFormDiv = function () {
+    let e = document.getElementById("newNoteForm");
+    e.style.visible = "hidden";
+    e.innerHTML = "";
+    e.style.color = "black";
+  };
+
+  // called to create a new note
+  const doNewNote = function () {
+    // start process of creating a new note
+    let e = document.getElementById("newNoteForm");
+    e.style.visibility = "visible";
+    e.style.color = "black";
+    e.innerHTML = newNoteText;
+    let now = Date.now();
+    let f = document.getElementById("filenameInput");
+    f.value = "-" + moment().format("YYYYMMDD") + ".md";
+  };
+
+  const doFindNoteOnDisk = function () {
+    // start the process of loading an existing note
+    let e = document.getElementById("newNoteForm");
+    e.style.visibility = "visible";
+    e.style.color = "black";
+    e.innerHTML = findNoteText;
+  };
+
+  const doFindFiles = function () {
+    // call server to find the files that match the criterion
+    let e = document.getElementById("filenameInput");
+    console.log("doFindFiles");
+    let search_string = e.value;
+    console.log(search_string);
+
+    data = { search_string: search_string };
+    $.post(`${SERVER_URL}/api/findfiles/`, data, function (data) {
+      let e = document.getElementById("noteListDiv");
+      console.log(`Received: ${data}`);
+      console.log(typeof data);
+      keys = Object.keys(data);
+      console.log(`${typeof keys} ${keys.length}`);
+      let lines = [`<div><br/>Found ${keys.length} notes<br/>`];
+      lines.push("<ul class='list-group'>");
+      for (let i = 0; i < keys.length; i++) {
+        console.log(String(data[keys[i]]).trim());
+        let link = createNoteLink(String(data[keys[i]]).trim());
+        lines.push(`<li class="list-group-item">${link}</li>`);
+      }
+      lines.push("</ul></di>");
+
+      e.innerHTML = lines.join("\n");
+      // localStorage.setItem("last_search", lines.join("\n"));
+      closeNewNoteFormDiv();
+    });
+    // window.location.href = `${SERVER_URL}/editor?filename=${filename}`
+  };
+
+  const doFindDatabaseEntries = function () {
+    // call server to find the files that match the criterion
+    let e = document.getElementById("filenameInput");
+    console.log("doFindFiles");
+    let search_string = e.value;
+    console.log(search_string);
+
+    data = { search_string: search_string };
+    $.post(`${SERVER_URL}/api/findFilesInDatabase/`, data, function (data) {
+      let e = document.getElementById("noteListDiv");
+      console.log(`Received: ${data}`);
+      console.log(typeof data);
+      keys = Object.keys(data);
+      console.log(`${typeof keys} ${keys.length}`);
+      let lines = [`<div><br/>Found ${keys.length} notes<br/>`];
+      lines.push("<ul class='list-group'>");
+      for (let i = 0; i < keys.length; i++) {
+        console.log(String(data[keys[i]]).trim());
+        let link = createNoteLink(String(data[keys[i]]).trim());
+        lines.push(`<li class="list-group-item">${link}</li>`);
+      }
+      lines.push("</ul></div>");
+
+      e.innerHTML = lines.join("\n");
+      // localStorage.setItem("last_search", lines.join("\n"));
+      closeNewNoteFormDiv();
+    });
+    // window.location.href = `${SERVER_URL}/editor?filename=${filename}`
+  };
+
+  const doFindNoteInDatabase = function () {
+    let e = document.getElementById("newNoteForm");
+    e.style.visibility = "visible";
+    e.style.color = "black";
+    e.innerHTML = findNoteInDatabaseText;
+  };
+
+  // called to load a specific note from the database
+  const doGetNote = function () {
+    // load a note from the database
+    let f = document.getElementById("filenameInput");
+    let filename = f.value;
+    if (filename === "") {
+      e = document.getElementById("filenameLabel");
+      e.innerHTML = "Filename [REQUIRED]";
+      e.style = "color:red";
+      return;
+    }
+    data = { filename: filename };
+    $.post(`${SERVER_URL}/api/get/`, data, function (data) {
+      console.log(`Received: ${data.text}`);
+    });
+    sessionStorage.setItem("dred_filename", filename);
+    window.location.href = `${SERVER_URL}/editor?filename=${filename}`;
+  };
+
+  // called when the creation of a new note is confirmed
+  const doCreateNote = function () {
+    data = {
+      filename: document.getElementById("filenameInput").value,
+      keywords: document.getElementById("keywordsInput").value,
+      present: document.getElementById("presentInput").value,
+      speakers: document.getElementById("speakersInput").value,
+    };
+    // ensure that filename is not empty
+    if (data.filename === "") {
+      e = document.getElementById("filenameLabel");
+      e.innerHTML = "Filename [REQUIRED]";
+      e.style = "color:red";
+      return;
+    }
+    if (String(data.filename).startsWith("-")) {
+      e = document.getElementById("filenameLabel");
+      e.innerHTML = "Filename cannot begin with a dash (-)";
+      e.style = "color:red";
+      return;
+    }
+    console.log("sending data to " + SERVER_URL + "/api/create");
+    let fullyQualifiedFilename = "";
+    $.post(`${SERVER_URL}/api/create/`, data, function (data) {
+      console.log("Received create" + String(data.result));
+      if (String(data.result).startsWith("error")) {
+        alert(
+          "Error creating file " + document.getElementById("filenameInput")
+        );
+      } else {
+        writtenFilename = String(data.filename);
+      }
+      if (writtenFilename.length > 0) {
+        window.location.href = `${SERVER_URL}/editor?filename=${writtenFilename}`;
+      }
+    });
+  };
+
+  // called when the creation of a new note is cancelled
+  const doCancelNote = function () {
+    e = document.getElementById("newNoteForm");
+    e.style.visibility = "hidden";
+    e.innerHTML = "";
+  };
+
+  // create a link based on the filename
+  const createNoteLink = function (filename) {
+    return `<a  href='${SERVER_URL}/editor?filename=${filename}'>${filename}</a>`;
+  };
+
+  // scan for new files and enter them in the database
+  const doUpdateDatabase = function () {
+    $.get(`${SERVER_URL}/api/updateDatabase/`, function (data) {
+      if (String(data.result).startsWith("success")) {
+        alert("Database updated. Added " + data.count + " notes.");
+      } else {
+        alert("Unable to update database.");
+      }
+    });
+  };
+
+  // initialize the page with a list of files
+  document.addEventListener("DOMContentLoaded", function () {
+    //if (localStorage.getItem("last_search") === null) {
+    if (true) {
+      console.log("No local storage found");
+      console.log("about to call: " + `${SERVER_URL}/api/list`);
+      $.get(`${SERVER_URL}/api/list/`, function (data) {
+        let e = document.getElementById("noteListDiv");
+        let list = String(data.notes).split(",");
+        console.log(list);
+        let lines = [`<div><br/>Found ${list.length} notes<br/>`];
+        lines.push("<ul class='list-group'>");
+        for (let i = 0; i < list.length; i++) {
+          let link = createNoteLink(list[i].trim());
+          lines.push(`<li class="list-group-item">${link}</li>`);
+        }
+        lines.push("</ul></div>");
+
+        e.innerHTML = lines.join("\n");
+        localStorage.setItem("last_search", lines.join("\n"));
+      });
+    } else {
+      console.log("Loading existing local storage");
+      //document.getElementById("noteListDiv").innerHTML =
+      // localStorage.getItem("last_search");
+    }
+  });
+</script>
+{% endblock %}
