@@ -24,9 +24,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.engine import Engine, Connection
 
-from dred.notes import Note
-from dred.settings import load_configuration
-from dred.utils import create_logger, debugging
+from noted.notes import Note
+from noted.settings import load_configuration
+from noted.utils import create_logger, debugging
 
 project_settings = load_configuration()
 
@@ -64,6 +64,7 @@ speakers = Table(
     Column("name", String, nullable=False),
 )
 
+# noinspection PyTypeChecker
 notes_keywords = Table(
     "notes_keywords",
     metadata_obj,
@@ -73,6 +74,7 @@ notes_keywords = Table(
     ForeignKeyConstraint(["meta_id"], ["keywords.id"]),
 )
 
+# noinspection PyTypeChecker
 notes_present = Table(
     "notes_present",
     metadata_obj,
@@ -82,6 +84,7 @@ notes_present = Table(
     ForeignKeyConstraint(["meta_id"], ["present.id"]),
 )
 
+# noinspection PyTypeChecker
 notes_speakers = Table(
     "notes_speakers",
     metadata_obj,

@@ -14,7 +14,7 @@ import sys
 from pydantic import BaseModel, ValidationError
 from dotenv import load_dotenv
 
-from dred import utils
+from noted import utils
 
 load_dotenv()
 _PREFIX = "DRED"
@@ -44,8 +44,8 @@ def default_settings() -> Settings:
     Returns:
         Settings: a Settings object with the standard default values.
     """
-    notes_path: str = "" # pathlib.Path.cwd().joinpath("notes").absolute().as_posix()
-    backup_path: str = "" # pathlib.Path.cwd().joinpath("notes").absolute().as_posix()
+    notes_path: str = ""  # pathlib.Path.cwd().joinpath("notes").absolute().as_posix()
+    backup_path: str = ""  # pathlib.Path.cwd().joinpath("notes").absolute().as_posix()
     database_path: str = ""
     # database_path: str = (
     #     pathlib.Path.cwd().joinpath("notes/dred.sqlite3").absolute().as_posix()
@@ -200,7 +200,7 @@ class Config(utils.SingletonClass):
         logger.debug("writing configuration: %s", f"{settings}")
         try:
             with open(self.config_file(), "w", encoding="utf-8") as file:
-                settings.initialized = True # consider removing
+                settings.initialized = True  # consider removing
                 file.write(settings.json())
             logger.debug(
                 "configuration file (%s) written to disk", self.config_file().as_posix()

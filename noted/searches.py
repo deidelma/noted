@@ -10,11 +10,11 @@ from typing import Optional
 import sqlalchemy.engine
 from sqlalchemy import select
 
-from dred import database
-from dred.database import notes
-from dred.notes import Note
-from dred.settings import load_configuration
-from dred.utils import create_logger
+from noted import database
+from noted.database import notes
+from noted.notes import Note
+from noted.settings import load_configuration
+from noted.utils import create_logger
 
 project_settings = load_configuration()
 
@@ -80,9 +80,9 @@ def process_files(
     Returns: result, optional update count . result is 0 on success
     """
 
-    def excluded(the_file: Path, excluded_files: list[str]) -> bool:
+    def excluded(a_file: Path, excluded_files: list[str]) -> bool:
         for stem in excluded_files:
-            if str(the_file.name).startswith(stem):
+            if str(a_file.name).startswith(stem):
                 return True
         return False
 
@@ -232,7 +232,7 @@ def do_count(db_pathname: str = "") -> int:
     return database.count_notes(engine)
 
 
-def do_backup(file_names: Optional[list[str]] = None) -> None:
+def do_backup(filenames: Optional[list[str]] = None) -> None:
     """
     Backups up the files in the current notes directory.
     If filenames is provided, only backs up those in the list.

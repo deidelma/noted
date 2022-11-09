@@ -19,14 +19,14 @@ DEBUGGING: bool | None = None
 
 
 def debugging() -> bool:
-    """Returns a boolean indicating debugging status"""
+    """Returns a boolean indicating debugging_on status"""
     if DEBUGGING:
         return DEBUGGING
     else:
         return False
 
 
-def create_logger(name: str = "ROOT", debugging: bool = False) -> logging.Logger:
+def create_logger(name: str = "ROOT", debugging_on: bool = False) -> logging.Logger:
     """Creates a dred system logger"""
     global DEBUGGING
 
@@ -41,7 +41,7 @@ def create_logger(name: str = "ROOT", debugging: bool = False) -> logging.Logger
     logger.addHandler(handler)
     # initialize DEBUGGING at the start of the program
     if not DEBUGGING:
-        DEBUGGING = debugging
+        DEBUGGING = debugging_on
 
     debug_level = logging.DEBUG if DEBUGGING else logging.INFO
     logger.setLevel(debug_level)

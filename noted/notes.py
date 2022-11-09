@@ -15,7 +15,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 from pydantic import BaseModel
-from dred.settings import load_configuration
+from noted.settings import load_configuration
 
 project_settings = load_configuration()
 
