@@ -27,9 +27,10 @@ go.work
 node_modules/
 
 # python
-__pycache___/
+__pycache__/
 noted/__pycache__/
 venv/
 .pytest_cache/
 go_templates/
 *.pyc
+__pycache__/*.pyc
