@@ -34,3 +34,5 @@ venv/
 go_templates/
 *.pyc
 __pycache__/*.pyc
+.idea/misc.xml
+.idea/inspectionProfiles/profiles_settings.xml
