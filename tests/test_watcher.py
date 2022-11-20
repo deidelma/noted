@@ -1,8 +1,12 @@
-import unittest
+"""
+Tests for watcher.py
+"""
+from watcher import valid_note
 
-class MyTestCase(unittest.TestCase):
-    def test_something(self):
-        self.assertEqual(True, False)  # add assertion here
 
-if __name__ == '__main__':
-    unittest.main()
+def test_valid_note():
+    assert valid_note("bob.md")
+    assert valid_note("usr/bin/alph.md")
+    assert not valid_note("crap.md")
+    assert not valid_note("bob.com")
+    assert not valid_note("crap_crap.md")

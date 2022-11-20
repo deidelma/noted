@@ -156,6 +156,24 @@ class OverwriteAttemptError(Exception):
     """Raised when there is an attempt to overwrite an existing database entry"""
 
 
+def already_stored(eng: Engine, filename: str, timestamp: datetime) -> bool:
+    """
+    Determine whether the note is already in the database based on its name and timestamp.
+
+    Args:
+        eng: the connection to the database
+        filename: the filename of the note to be checked
+        timestamp: the timestamp of the note to be checked
+
+    Returns: True if the note is already in the database.
+    """
+    with eng.begin() as conn:
+        stmt = notes.select().where(
+            notes.c.filename == filename, notes.c.timestamp == timestamp  # type: ignore
+        )
+        return conn.execute(stmt).fetchone() is not None
+
+
 def add_note(eng: Engine, note: Note) -> int:
     """
     Adds the note to the database.  Automatically inserts keywords, present, speakers.
@@ -168,11 +186,12 @@ def add_note(eng: Engine, note: Note) -> int:
     """
     with eng.begin() as conn:
         # first check if there is an existing entry with the same filename and timestamp
-        stmt = notes.select().where(
-            notes.c.filename == note.filename, notes.c.timestamp == note.timestamp  # type: ignore
-        )
-        row = conn.execute(stmt).fetchone()
-        if row:
+        # stmt = notes.select().where(
+        #     notes.c.filename == note.filename, notes.c.timestamp == note.timestamp  # type: ignore
+        # )
+        # row = conn.execute(stmt).fetchone()
+        # if row:
+        if already_stored(eng, note.filename, note.timestamp):
             raise OverwriteAttemptError(
                 f"attempt to overwrite note: {note.filename}:{note.timestamp}"
             )
@@ -245,7 +264,7 @@ def sort_by_timestamp(notes_list: list[Note], ascending=True) -> list[Note]:
 
 
 def find_notes_by_keyword(
-    eng: Engine, keyword: str, wildcard: bool = False
+        eng: Engine, keyword: str, wildcard: bool = False
 ) -> list[Note]:
     """
     Find notes in the database associated with the provided keyword
@@ -275,7 +294,7 @@ def find_notes_by_keyword(
 
 
 def find_notes_by_speaker(
-    eng: Engine, speaker: str, wildcard: bool = False
+        eng: Engine, speaker: str, wildcard: bool = False
 ) -> list[Note]:
     """
     Find notes in the database associated with the provided speaker
@@ -302,7 +321,7 @@ def find_notes_by_speaker(
 
 
 def find_notes_by_present(
-    eng: Engine, attendee: str, wildcard: bool = False
+        eng: Engine, attendee: str, wildcard: bool = False
 ) -> list[Note]:
     """
     Find notes in the database associated with the provided attendee
@@ -330,7 +349,7 @@ def find_notes_by_present(
 
 
 def find_notes_by_filename_and_timestamp(
-    eng: Engine, filename: str, timestamp: datetime
+        eng: Engine, filename: str, timestamp: datetime
 ) -> list[Note]:
     """
     Find notes in the database associated with the provided filename and timestamp.
@@ -358,7 +377,7 @@ def find_notes_by_filename_and_timestamp(
 
 
 def find_notes_by_filename(
-    eng: Engine, filename: str, wildcard: bool = False
+        eng: Engine, filename: str, wildcard: bool = False
 ) -> list[Note]:
     """
     Find notes in the database associated with the provided filename.
