@@ -12,7 +12,7 @@ from pathlib import Path
 from watchdog.events import FileSystemEvent, FileSystemEventHandler  # type: ignore
 from watchdog.observers import Observer  # type: ignore
 
-from git import Repo
+from git import Repo # type: ignore
 
 from noted.database import already_stored
 from noted.settings import load_configuration
@@ -77,38 +77,20 @@ def update_git_repository() -> None:
         logger.error("Unable to find .git directory.  Has it been initialized?")
         return
     repo = Repo(git_path)
-    git=repo.git
+    git = repo.git
     added = git.add("*.md")
     logger.info(added)
     committed = git.commit("-m Update:" + datetime.datetime.now().isoformat())
     logger.info(committed)
 
-
-    # git = Repo(git_path).git
-    # git.
-    # completed = subprocess.run(["git", "add", "*.md"], stderr=subprocess.STDOUT)
-    # if completed.returncode == 0:
-    #     logger.info("staged all notes")
-    # else:
-    #     logger.error("problem encountered while adding to git repository: %s", completed.stdout)
-    #     return
-    # timestamp = datetime.datetime.now().isoformat()
-    # completed = subprocess.run(["git", "commit", "-m", "Update:" + timestamp], stderr=subprocess.STDOUT)
-    # if completed.returncode == 0:
-    #     logger.info("committed update: %s", timestamp)
-    # else:
-    #     logger.error("problem encountered while committing to git repository: %s", completed.stdout)
-    #     return
-
-
 class NotedEventHandler(FileSystemEventHandler):
     """Custom event handler for the noted system.  Only tracks created and modified events"""
 
     def __init__(
-            self,
-            file_suffix=".md",
-            create_processor=lambda evt: logger.info("file created: %s", evt.src_path),
-            modified_processor=lambda evt: logger.info("file modified: %s", e.src_path),
+        self,
+        file_suffix=".md",
+        create_processor=lambda evt: logger.info("file created: %s", evt.src_path),
+        modified_processor=lambda evt: logger.info("file modified: %s", evt.src_path),
     ):
         super(NotedEventHandler, self).__init__()
         self.file_suffix = file_suffix
@@ -156,7 +138,7 @@ class MonitoredNoteTable:
         if filename in self._modified_notes:
             del self._modified_notes[filename]
 
-    def get_timestamp(self, filename: str) -> datetime:
+    def get_timestamp(self, filename: str) -> datetime.datetime:
         """
         Return the timestamp corresponding to the filename.
         N.B. Does not check to ensure that filename is in the table.
@@ -198,8 +180,8 @@ class MonitoredNoteTable:
 
 
 MODIFIED_NOTES_TABLE = MonitoredNoteTable()
-DATABASE_UPDATE_TIME_DELTA = 10
-EXCLUDED_FILENAME_STEMS = {'crap'}  # stems are 4 characters long
+DATABASE_UPDATE_TIME_DELTA = 60 * 5  # 5 minutes
+EXCLUDED_FILENAME_STEMS = {"crap"}  # stems are 4 characters long
 
 
 def handle_modified_event(evt: FileSystemEvent) -> None:
@@ -209,7 +191,7 @@ def handle_modified_event(evt: FileSystemEvent) -> None:
     Args:
         evt: A file creation or modification event.
     """
-    logger.info("handling %s", evt.src_path)
+    logger.debug("handling %s", evt.src_path)
     MODIFIED_NOTES_TABLE.add_note(evt.src_path)
 
 
@@ -218,7 +200,9 @@ if __name__ == "__main__":
     logger.info("scanning files for notes that need to be loaded in the database")
     result, number_updated = do_scan(exclude=list(EXCLUDED_FILENAME_STEMS))
     if result != 0:
-        logger.fatal("fatal error: unable to scan directory %s", project_settings.notes_path)
+        logger.fatal(
+            "fatal error: unable to scan directory %s", project_settings.notes_path
+        )
         sys.exit(1)
     # monitor the notes path
     logger.info("monitoring directory: %s", project_settings.notes_path)
@@ -248,11 +232,21 @@ if __name__ == "__main__":
                     p = Path(note)
                     if not valid_note(p):
                         logger.info("invalid note: %s", note)
-                    elif already_stored(engine, note, MODIFIED_NOTES_TABLE.get_timestamp(note)):
-                        logger.info("already stored: %s", note, MODIFIED_NOTES_TABLE.get_timestamp(note).isoformat())
+                    elif already_stored(
+                        engine, note, MODIFIED_NOTES_TABLE.get_timestamp(note)
+                    ):
+                        logger.info(
+                            "already stored: %s",
+                            note,
+                            MODIFIED_NOTES_TABLE.get_timestamp(note).isoformat(),
+                        )
                     else:
                         process_file(engine, p)
-                        logger.info("stored %s %s", note, MODIFIED_NOTES_TABLE.get_timestamp(note).isoformat())
+                        logger.info(
+                            "stored %s %s",
+                            note,
+                            MODIFIED_NOTES_TABLE.get_timestamp(note).isoformat(),
+                        )
                         MODIFIED_NOTES_TABLE.drop_note(note)
                 except IOError as e:
                     logger.fatal("Fatal error: Unable to read file %s.", note)
