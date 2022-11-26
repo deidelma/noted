@@ -1,5 +1,5 @@
 """
-Module providing scans and searches for the dred project.
+Module providing scans and searches for the noted project.
 
 
 """
@@ -64,6 +64,35 @@ def process_file(engine: sqlalchemy.engine.Engine, file_path: Path) -> None:
     logger.debug("Note %s added to database.", note.filename)
 
 
+def valid_directory_path(path: Path):
+    """
+    Ensure provided path refers to a valid directory
+
+    Args:
+        path (Path): the Path to assess
+
+    Returns: True if the path is valid
+    """
+    return path.exists() and path.is_dir()
+
+
+def excluded(a_file: Path, excluded_files: list[str]) -> bool:
+    """
+    Determine if a file is in the provided list of excluded files.
+
+    Args:
+        a_file (Path): The path to the file to test.
+        excluded_files (list[str]): The list of excluded files, which are stems of 4 characters.
+
+    Returns:
+        bool: _description_
+    """
+    for stem in excluded_files:
+        if str(a_file.name).startswith(stem):
+            return True
+    return False
+
+
 def process_files(
     engine: sqlalchemy.engine.Engine,
     notes_path: Path,
@@ -80,19 +109,16 @@ def process_files(
     Returns: result, optional update count . result is 0 on success
     """
 
-    def excluded(a_file: Path, excluded_files: list[str]) -> bool:
-        for stem in excluded_files:
-            if str(a_file.name).startswith(stem):
-                return True
-        return False
-
-    if not notes_path.exists():
-        logger.critical("%s does not exist", notes_path)
+    if not valid_directory_path(notes_path):
+        logger.critical("%s is not a valid directory path", notes_path.as_posix())
         return 1, 0
+    # if not notes_path.exists():
+    #     logger.critical("%s does not exist", notes_path)
+    #     return 1, 0
 
-    if not notes_path.is_dir():
-        logger.critical("%s is not a valid directory.", notes_path.absolute())
-        return 1, 0
+    # if not notes_path.is_dir():
+    #     logger.critical("%s is not a valid directory.", notes_path.absolute())
+    #     return 1, 0
 
     # make sure excluded files are in a list
     if isinstance(exclude_files, str):
@@ -245,7 +271,6 @@ def do_backup(filenames: Optional[list[str]] = None) -> None:
     current_bu_dir_name: str = f"{ts}"
     print(current_bu_dir_name)
     bu_path = Path(project_settings.backup_path).joinpath()
-
-    if __name__ == "main":
-        # testing use only
-        do_backup()
+    logger.info("backing up to %s", bu_path.as_posix())
+    if filenames:
+        logger.info("restricting backup to %d files", len(filenames))
