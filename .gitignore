@@ -37,3 +37,4 @@ __pycache__/*.pyc
 .idea/misc.xml
 .idea/inspectionProfiles/profiles_settings.xml
 noted/__pycache__/database.cpython-310.pyc
+noted.egg-info/
