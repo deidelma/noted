@@ -59,9 +59,9 @@ class Config(utils.SingletonClass):
     """Singleton that provides a framework to manage the application's configuration file"""
 
     # load environment variable
-    PREFIX = "DRED"
+    PREFIX = "NOTED"
     CONFIG_DIR_PATH: pathlib.Path = pathlib.Path(os.environ.get(f"{PREFIX}_CONFIG", "None"))
-    CONFIG_FILE_PATH: pathlib.Path = CONFIG_DIR_PATH.joinpath("dred.json")
+    CONFIG_FILE_PATH: pathlib.Path = CONFIG_DIR_PATH.joinpath("noted.json")
 
     def __init__(self, config_file_path: str | pathlib.Path | None = None):
         """
@@ -69,8 +69,8 @@ class Config(utils.SingletonClass):
 
         Args:
             config_file_path (str | pathlib.Path | None, optional): the path to the configuration file
-                Eg: DRED_CONFIG="tests/data/dred.json"
-                Otherwise use default: "~/.config/dred/dred.json
+                Eg: NOTED_CONFIG="tests/data/noted.json"
+                Otherwise use default: "~/.config/noted/noted.json
         """
         # first check function argument
         if config_file_path:
@@ -80,10 +80,10 @@ class Config(utils.SingletonClass):
             self.CONFIG_DIR_PATH = config_file_path.parent
         elif self.CONFIG_DIR_PATH == pathlib.Path("None"):
             # no environment variable so use default
-            self.CONFIG_DIR_PATH = pathlib.Path.home().joinpath(".config/dred").absolute()
+            self.CONFIG_DIR_PATH = pathlib.Path.home().joinpath(".config/noted").absolute()
         # otherwise we fall back to the environment variable
         logger.debug("CONFIG_DIR: %s", self.CONFIG_DIR_PATH.as_posix())
-        self.CONFIG_FILE_PATH = self.CONFIG_DIR_PATH.joinpath("dred.json")
+        self.CONFIG_FILE_PATH = self.CONFIG_DIR_PATH.joinpath("noted.json")
         logger.debug("CONFIG_FILE: %s", self.CONFIG_FILE_PATH.as_posix())
 
         # check if .config/ exists -- only needed on clean installs since .config used by many programs
