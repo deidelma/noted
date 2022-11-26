@@ -15,7 +15,8 @@ dependencies = [
     "Markdown",
     "GitPython",
     "python-dotenv",
-    "watchdog"
+    "watchdog",
+    "bottle"
 ]
 version = "0.2.1"
 
