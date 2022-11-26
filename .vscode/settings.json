@@ -1,3 +1,10 @@
 {
-  "cSpell.words": ["autostore", "dotenv", "levelname", "sqlalchemy"]
+  "cSpell.words": [
+    "autostore",
+    "codicon",
+    "dotenv",
+    "levelname",
+    "noconfig",
+    "sqlalchemy"
+  ]
 }
