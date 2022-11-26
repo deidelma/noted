@@ -27,7 +27,7 @@ def debugging() -> bool:
 
 
 def create_logger(name: str = "ROOT", debugging_on: bool = False) -> logging.Logger:
-    """Creates a dred system logger"""
+    """Creates a noted system logger"""
     global DEBUGGING
 
     handler = logging.StreamHandler(sys.stderr)
@@ -58,28 +58,4 @@ def to_boolean(value: Any) -> bool:
         raise ValueError(f"unable to convert object {repr(value)} to boolean")
 
 
-# from dred.settings import Settings
-#
-# project_settings = Settings()
-#
-#
-# def get_paths_from_notes_directory(notes_dir: str = "") -> list[Path]:
-#     """
-#     Gets the pathlib.Path of the Markdown files in the current notes directory.
-#
-#     Args:
-#         notes_dir (str, optional): Used for testing. Defaults to project_settings.notes_dir.
-#
-#     Raises:
-#         ValueError: Indicates invalid notes_dir.
-#
-#     Returns:
-#         list[Path]: The paths to the notes files.
-#     """
-#
-#     if len(notes_dir) == 0:
-#         notes_dir = project_settings.notes_dir
-#     dir_path = Path(notes_dir)
-#     if not dir_path.exists():
-#         raise ValueError("Attempt to read file paths from an invalid directory.")
-#     return list(dir_path.glob("*.md"))
+
