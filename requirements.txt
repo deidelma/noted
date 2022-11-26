@@ -14,7 +14,7 @@ Markdown==3.4.1
 MarkupSafe==2.1.1
 mypy==0.991
 mypy-extensions==0.4.3
--e git+https://github.com/deidelma/noted.git@4d444da1cb14bdedffb6bf922563a81922e133f1#egg=noted
+-e git+https://github.com/deidelma/noted.git@27b4aeceda209edfd4b46bc375170ea4f2345440#egg=noted
 packaging==21.3
 pathspec==0.10.2
 platformdirs==2.5.4
