@@ -1,7 +1,7 @@
 """
 Tests for watcher.py
 """
-from watcher import valid_note
+from noted.watcher import valid_note
 
 
 def test_valid_note():

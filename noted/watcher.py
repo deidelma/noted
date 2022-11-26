@@ -4,7 +4,6 @@ automatically update the database and git repository whenever a note file is cre
 """
 
 import datetime
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -67,7 +66,6 @@ def update_git_repository() -> None:
     Attempts to update the git repository associated with the notes directory.
     Although progress is logged, errors do not result in interruption of the program.
     """
-    notes_path = Path(project_settings.notes_path)
     # first purge detritus
     erase_files("*.*~")
     erase_files("crap*.*")
@@ -194,8 +192,7 @@ def handle_modified_event(evt: FileSystemEvent) -> None:
     logger.debug("handling %s", evt.src_path)
     MODIFIED_NOTES_TABLE.add_note(evt.src_path)
 
-
-if __name__ == "__main__":
+def main():
     # clean up notes that haven't yet been put in the database
     logger.info("scanning files for notes that need to be loaded in the database")
     result, number_updated = do_scan(exclude=list(EXCLUDED_FILENAME_STEMS))
@@ -248,7 +245,7 @@ if __name__ == "__main__":
                             MODIFIED_NOTES_TABLE.get_timestamp(note).isoformat(),
                         )
                         MODIFIED_NOTES_TABLE.drop_note(note)
-                except IOError as e:
+                except IOError:
                     logger.fatal("Fatal error: Unable to read file %s.", note)
                     sys.exit(1)
     except KeyboardInterrupt:
@@ -257,3 +254,6 @@ if __name__ == "__main__":
     observer.join()
     update_git_repository()
     logger.info("watcher completed")
+
+if __name__ == "__main__":
+    main()

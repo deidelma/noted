@@ -19,7 +19,12 @@ dependencies = [
 ]
 version = "0.2.0"
 
+[project.scripts]
+watcher = "noted.watcher:main"
+
 [tools.setuptools]
 packages=["noted"]
+
+
 
 
