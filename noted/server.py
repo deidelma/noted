@@ -1,7 +1,7 @@
 """
 server.py
 
-HTTP server for the backend of the dred project
+HTTP server for the backend of the noted project
 """
 import os
 from pathlib import Path
@@ -15,21 +15,21 @@ import time
 
 from bottle import Bottle, static_file, request, jinja2_view, response
 
-from dred.utils import create_logger, debugging
-from dred.settings import load_configuration
-from dred.database import find_notes_by_filename, connect_to_database, find_all_notes
-from dred.notes import Note
-from dred.searches import do_scan
-import dred.settings as settings
+from noted.utils import create_logger, debugging
+from noted.settings import load_configuration
+from noted.database import find_notes_by_filename, connect_to_database, find_all_notes
+from noted.notes import Note
+from noted.searches import do_scan
+import noted.settings as settings
 
-logger = create_logger(__name__, debugging=True)
+logger = create_logger(__name__)
 project_settings = load_configuration()
 
 PORT = 5823
 SERVER_URL = f"http://localhost:{PORT}/"
-STATIC_JS = "./static/js"
+STATIC_JS = ".noted/static/js"
 logger.debug(f"current working directory: {Path.cwd()}")
-view = partial(jinja2_view, template_lookup=["./templates/"])
+view = partial(jinja2_view, template_lookup=["./noted/templates/"])
 
 app = Bottle()
 
@@ -55,29 +55,29 @@ def common_worker(filepath):
 
 @app.route(r"/static/css/<filepath:re:.*\.css>")
 def css(filepath):
-    return static_file(filepath, root="./static/css")
+    return static_file(filepath, root="./noted/static/css")
 
 
 @app.route(r"/static/icons/<filepath:re:.*\.ico>")
 def icons(filepath):
-    return static_file(filepath, root="./static/icons")
+    return static_file(filepath, root="./noted/static/icons")
 
 
 @app.route(
     r"/static/base/browser/ui/codicons/codicon/<filepath:re:.*\.(eot|otf|svg|ttf|woff|woff2?)>"
 )
 def codicon(filepath):
-    return static_file(filepath, root="./static/font")
+    return static_file(filepath, root="./noted/static/font")
 
 
 @app.route(r"/static/font/<filepath:re:.*\.(eot|otf|svg|ttf|woff|woff2?)>")
 def font(filepath):
-    return static_file(filepath, root="./static/font")
+    return static_file(filepath, root="./noted/static/font")
 
 
 @app.route(r"/vs/editor/editor.main.css")
 def editor_css():
-    return static_file("editor.main.css", root="./static/css")
+    return static_file("editor.main.css", root="./noted/static/css")
 
 
 ###############################################################

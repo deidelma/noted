@@ -1,16 +1,18 @@
 """
-entry point for the dred editor
+entry point for the noted editor
 """
 
-from dred.utils import create_logger
-from dred.settings import load_configuration
+from noted.utils import create_logger
+from noted.settings import load_configuration
 
-# from dred.server import launch_server
-from dred.app import mainloop
+# from noted.server import launch_server
+from noted.app import mainloop, run
 
 
-logger = create_logger(__name__, debugging=True)
+logger = create_logger(__name__)
 project_settings = load_configuration()
 
 if __name__ == "__main__":
-    mainloop(launch_browser=False)
+    logger.info("starting mainloop")
+    # mainloop(launch_browser=False)
+    run()
