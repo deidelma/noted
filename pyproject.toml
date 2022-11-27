@@ -9,6 +9,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 keywords = ["markdown","note taking"]
 license = {text = "MIT License"}
+license-file = "LICENSE.txt"
 dependencies = [
     "SQLAlchemy",
     "pydantic",
@@ -20,6 +21,12 @@ dependencies = [
     "jinja2"
 ]
 version = "0.2.1"
+author = "David Eidelman"
+classifiers = [
+    "License :: MIT",
+    "Operating System :: OS Independent",
+    "Program Language :: Python :: 3 :: Only"
+]
 
 [project.scripts]
 watcher = "noted.watcher:main"
