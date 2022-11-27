@@ -27,9 +27,17 @@ project_settings = load_configuration()
 
 PORT = 5823
 SERVER_URL = f"http://localhost:{PORT}/"
-STATIC_JS = ".noted/static/js"
-logger.debug(f"current working directory: {Path.cwd()}")
-view = partial(jinja2_view, template_lookup=["./noted/templates/"])
+
+STATIC_PATH = Path(__file__).absolute().parent.joinpath("static")
+TEMPLATES_PATH = Path(__file__).absolute().parent.joinpath("templates")
+logger.debug("Loading templates from %s", TEMPLATES_PATH.as_posix())
+STATIC_JS = STATIC_PATH.joinpath("js")
+STATIC_CSS= STATIC_PATH.joinpath("css")
+STATIC_ICONS=STATIC_PATH.joinpath("icons")
+STATIC_FONTS=STATIC_PATH.joinpath("fonts")
+logger.debug("static js: %s", STATIC_JS.as_posix())
+
+view = partial(jinja2_view, template_lookup=[TEMPLATES_PATH])
 
 app = Bottle()
 
@@ -55,29 +63,29 @@ def common_worker(filepath):
 
 @app.route(r"/static/css/<filepath:re:.*\.css>")
 def css(filepath):
-    return static_file(filepath, root="./noted/static/css")
+    return static_file(filepath, root=STATIC_CSS)
 
 
 @app.route(r"/static/icons/<filepath:re:.*\.ico>")
 def icons(filepath):
-    return static_file(filepath, root="./noted/static/icons")
+    return static_file(filepath, root=STATIC_ICONS)
 
 
 @app.route(
     r"/static/base/browser/ui/codicons/codicon/<filepath:re:.*\.(eot|otf|svg|ttf|woff|woff2?)>"
 )
 def codicon(filepath):
-    return static_file(filepath, root="./noted/static/font")
+    return static_file(filepath, root=STATIC_FONTS)
 
 
 @app.route(r"/static/font/<filepath:re:.*\.(eot|otf|svg|ttf|woff|woff2?)>")
 def font(filepath):
-    return static_file(filepath, root="./noted/static/font")
+    return static_file(filepath, root=STATIC_FONTS)
 
 
 @app.route(r"/vs/editor/editor.main.css")
 def editor_css():
-    return static_file("editor.main.css", root="./noted/static/css")
+    return static_file("editor.main.css", root=STATIC_CSS)
 
 
 ###############################################################
@@ -148,6 +156,7 @@ def create_list_from_word_string(word_string: str) -> list[str]:
 @app.route("/api/create/", method="post")
 def create():
     """Creates a new note with the provided parameters"""
+    logger.info("received request to create a note")
     filename: str = request.params["filename"]  # type:ignore
     keywords = request.params["keywords"]  # type:ignore
     present = request.params["present"]  # type:ignore
@@ -177,6 +186,7 @@ def create():
 @app.route("/api/findfiles/", method="post")
 def find_files():
     """Returns the names of files corresponding to the provided search string"""
+    logger.info("received request to find files on disk based on a search")
     key: str = str(request.params["search_string"]).lower()  # type:ignore
     logger.debug("received request to search for files starting with '%s'", key)
     if not key.endswith("*"):
@@ -194,6 +204,7 @@ def find_files():
 @app.route("/api/findFilesInDatabase/", method="post")
 def find_files_in_database():
     """Returns the names of files from the database corresponding to the provided search string"""
+    logger.info("received request to find files in the database based on a search")
     key: str = str(request.params["search_string"]).lower()  # type:ignore
     logger.debug("received request to search for files starting with '%s'", key)
     eng = connect_to_database()
@@ -213,6 +224,7 @@ def find_files_in_database():
 @app.route("/api/get/", method="post")
 def get():
     """Return the note matching the request to the frontend"""
+    logger.info("received request to retrieve a file")
     filename = request.params["filename"]  # type:ignore
     logger.debug("get: received request for filename: %s", filename)
     note_path = Path(project_settings.notes_path).joinpath(filename)
@@ -242,6 +254,7 @@ def full_path():
 @app.route("/api/store/", method="post")
 def store():
     """Called when data is to be stored on disk, after a change."""
+    logger.info("received request to store a file on disk")
     text: str = request.params["text"]  # type:ignore
     filename: str = request.params["filename"]  # type:ignore
     if not filename:
@@ -261,6 +274,7 @@ def store():
 @app.route("/api/list")
 def list_notes():
     """Returns a list of notes stored in the database"""
+    logger.info("received request to list files on disk")
     # note_list = ['lesley-20220830.md', 'bob-20210723.md', 'harry-20221212.md']
     # data = {'notes':note_list}
     logger.debug("in api list")
@@ -277,6 +291,7 @@ def list_notes():
 @app.route("/api/updateDatabase", method="GET")
 def update_database():
     """Updates the database with files in the currently active notes directory"""
+    logger.info("received request to update the database")
     result, number_updated = do_scan(exclude=["crap"])
     if result == 0:
         return {"result": "success", "count": number_updated}
