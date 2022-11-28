@@ -249,7 +249,7 @@ def main():
                 except IOError:
                     logger.fatal("Fatal error: Unable to read file %s.", note)
                     sys.exit(1)
-                except OverwriteAttemptError as e:
+                except OverwriteAttemptError:
                     logger.info(
                         "Attempt to overwrite existing record: %s %s",
                         note,
@@ -259,7 +259,7 @@ def main():
         logger.info("observer interrupted")
         observer.stop()
     observer.join()
-    update_git_repository()
+    # update_git_repository()
     logger.info("watcher completed")
 
 if __name__ == "__main__":
