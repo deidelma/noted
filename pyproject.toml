@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools", "setuptools.scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "noted"
+description = "A text file based note taking system"
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["markdown","note taking"]
+license = {text = "MIT License"}
+dependencies = [
+    "SQLAlchemy",
+    "pydantic",
+    "Markdown",
+    "GitPython",
+    "python-dotenv",
+    "watchdog",
+    "bottle",
+    "jinja2"
+]
+version = "0.2.1"
+
+
+[project.scripts]
+watcher = "noted.watcher:main"
+notedserver = "noted.app:serve"
+noted = "noted.app:run"
+
+
+[tools.setuptools]
+packages=["noted"]
+
+classifiers = [
+    "License :: MIT",
+    "Operating System :: OS Independent",
+    "Program Language :: Python :: 3 :: Only"
+]
+authors= ["David Eidelman"]
+license="MIT"
+license-file="LICENSE.txt"
+
+

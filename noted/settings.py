@@ -1,7 +1,7 @@
 """
 settings.py
 
-Provides system-wide settings for the dred project.
+Provides system-wide settings for the noted project.
 
 Provides a singleton object CONFIG that handles all interactions with the configuration file.
 
@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 from noted import utils
 
 load_dotenv()
-_PREFIX = "DRED"
+_PREFIX = "NOTED"
 debugging_mode_on = utils.to_boolean(os.environ.get(f"{_PREFIX}_DEBUG", False))
 if not debugging_mode_on:
     debugging_mode_on = utils.to_boolean(os.environ.get("DEBUG", False))
@@ -48,7 +48,7 @@ def default_settings() -> Settings:
     backup_path: str = ""  # pathlib.Path.cwd().joinpath("notes").absolute().as_posix()
     database_path: str = ""
     # database_path: str = (
-    #     pathlib.Path.cwd().joinpath("notes/dred.sqlite3").absolute().as_posix()
+    #     pathlib.Path.cwd().joinpath("notes/noted.sqlite3").absolute().as_posix()
     # )
     return Settings(
         notes_path=notes_path, backup_path=backup_path, database_path=database_path
@@ -59,9 +59,11 @@ class Config(utils.SingletonClass):
     """Singleton that provides a framework to manage the application's configuration file"""
 
     # load environment variable
-    PREFIX = "DRED"
-    CONFIG_DIR_PATH: pathlib.Path = pathlib.Path(os.environ.get(f"{PREFIX}_CONFIG", "None"))
-    CONFIG_FILE_PATH: pathlib.Path = CONFIG_DIR_PATH.joinpath("dred.json")
+    PREFIX = "NOTED"
+    CONFIG_DIR_PATH: pathlib.Path = pathlib.Path(
+        os.environ.get(f"{PREFIX}_CONFIG", "None")
+    )
+    CONFIG_FILE_PATH: pathlib.Path = CONFIG_DIR_PATH.joinpath("noted.json")
 
     def __init__(self, config_file_path: str | pathlib.Path | None = None):
         """
@@ -69,8 +71,8 @@ class Config(utils.SingletonClass):
 
         Args:
             config_file_path (str | pathlib.Path | None, optional): the path to the configuration file
-                Eg: DRED_CONFIG="tests/data/dred.json"
-                Otherwise use default: "~/.config/dred/dred.json
+                Eg: NOTED_CONFIG="tests/data/noted.json"
+                Otherwise use default: "~/.config/noted/noted.json
         """
         # first check function argument
         if config_file_path:
@@ -80,10 +82,12 @@ class Config(utils.SingletonClass):
             self.CONFIG_DIR_PATH = config_file_path.parent
         elif self.CONFIG_DIR_PATH == pathlib.Path("None"):
             # no environment variable so use default
-            self.CONFIG_DIR_PATH = pathlib.Path.home().joinpath(".config/dred").absolute()
+            self.CONFIG_DIR_PATH = (
+                pathlib.Path.home().joinpath(".config/noted").absolute()
+            )
         # otherwise we fall back to the environment variable
         logger.debug("CONFIG_DIR: %s", self.CONFIG_DIR_PATH.as_posix())
-        self.CONFIG_FILE_PATH = self.CONFIG_DIR_PATH.joinpath("dred.json")
+        self.CONFIG_FILE_PATH = self.CONFIG_DIR_PATH.joinpath("noted.json")
         logger.debug("CONFIG_FILE: %s", self.CONFIG_FILE_PATH.as_posix())
 
         # check if .config/ exists -- only needed on clean installs since .config used by many programs
@@ -184,7 +188,10 @@ class Config(utils.SingletonClass):
                 data = file.read()
                 return Settings.parse_raw(data, content_type="json", encoding="utf-8")
         except FileNotFoundError:
-            logger.fatal("unable to find configuration file: %s - using defaults", self.config_file())
+            logger.fatal(
+                "unable to find configuration file: %s - using defaults",
+                self.config_file(),
+            )
             return default_settings()
         except ValidationError as e:
             logger.fatal("invalid configuration file: %s", f"{e}")

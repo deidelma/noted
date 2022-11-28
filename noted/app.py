@@ -1,9 +1,9 @@
-"""External entry point for the dred package"""
+"""External entry point for the noted package"""
 import webbrowser
 import time
 from signal import SIGINT, signal
-from dred.server import launch_server, SERVER_URL, stop_server
-from dred.utils import create_logger
+from noted.server import launch_server, SERVER_URL, stop_server
+from noted.utils import create_logger
 
 logger = create_logger(__name__)
 
@@ -20,8 +20,9 @@ signal(SIGINT, interrupt_handler)
 
 
 def mainloop(launch_browser: bool = False):
+    logger.info("launching server")
     launch_server()
-    logger.debug("server [%s] launched", SERVER_URL)
+    logger.info("server [%s] launched", SERVER_URL)
     if launch_browser:
         webbrowser.open(f"{SERVER_URL}home")
 

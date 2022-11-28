@@ -7,7 +7,8 @@ content %} {% if config_found == False %}
 </script>
 {% endif %}
 
-<h2>DRED Note Taking System</h2>
+<h2>Noted</h2>
+<h3>A text file based note taking system</h3>
 <div>
   <button class="btn btn-primary" onclick="doNewNote()">New Note</button>
   <button class="btn btn-primary" onclick="doFindNoteOnDisk()">
@@ -249,14 +250,36 @@ content %} {% if config_found == False %}
     });
   };
 
-  // initialize the page with a list of files
+
+  const showNotesList = function (note_names){
+    let e = document.getElementById("noteListDiv");
+    let list=note_names;
+    let lines = [`<div><br/>Found ${list.length} notes<br/>`];
+      lines.push("<ul class='list-group'>");
+      for (let i = 0; i < list.length; i++) {
+        let link = createNoteLink(list[i].trim());
+        lines.push(`<li class="list-group-item">${link}</li>`);
+      }
+      lines.push("</ul></div>");
+
+      e.innerHTML = lines.join("\n");
+      localStorage.setItem("last_search", lines.join("\n"));
+  };
+
   document.addEventListener("DOMContentLoaded", function () {
+    console.log("DOMContentLoaded. About to call:" + `${SERVER_URL}/api/list`)
+    fetch(`${SERVER_URL}/api/list`)
+    .then(response => response.json())
+    .then(r => showNotesList(String(r.notes).split(",")));
+  });
+  // initialize the page with a list of files
+  let nothing = function () {
     //if (localStorage.getItem("last_search") === null) {
-    if (true) {
       console.log("No local storage found");
       console.log("about to call: " + `${SERVER_URL}/api/list`);
-      $.get(`${SERVER_URL}/api/list/`, function (data) {
-        let e = document.getElementById("noteListDiv");
+      <!-- $.get(`${SERVER_URL}/api/list/`, function (data) { -->
+      $.get(SERVER_URL + '/api/list/', function (data) {
+          let e = document.getElementById("noteListDiv");
         let list = String(data.notes).split(",");
         console.log(list);
         let lines = [`<div><br/>Found ${list.length} notes<br/>`];
@@ -270,11 +293,6 @@ content %} {% if config_found == False %}
         e.innerHTML = lines.join("\n");
         localStorage.setItem("last_search", lines.join("\n"));
       });
-    } else {
-      console.log("Loading existing local storage");
-      //document.getElementById("noteListDiv").innerHTML =
-      // localStorage.getItem("last_search");
-    }
-  });
+  };
 </script>
 {% endblock %}
