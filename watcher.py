@@ -12,9 +12,9 @@ from pathlib import Path
 from watchdog.events import FileSystemEvent, FileSystemEventHandler  # type: ignore
 from watchdog.observers import Observer  # type: ignore
 
-from git import Repo # type: ignore
+from git import Repo  # type: ignore
 
-from noted.database import already_stored
+from noted.database import already_stored, OverwriteAttemptError
 from noted.settings import load_configuration
 from noted.utils import create_logger
 from noted.searches import do_scan, process_file
@@ -82,6 +82,7 @@ def update_git_repository() -> None:
     logger.info(added)
     committed = git.commit("-m Update:" + datetime.datetime.now().isoformat())
     logger.info(committed)
+
 
 class NotedEventHandler(FileSystemEventHandler):
     """Custom event handler for the noted system.  Only tracks created and modified events"""
@@ -251,6 +252,12 @@ if __name__ == "__main__":
                 except IOError as e:
                     logger.fatal("Fatal error: Unable to read file %s.", note)
                     sys.exit(1)
+                except OverwriteAttemptError as e:
+                    logger.info(
+                        "Attempt to overwrite existing record: %s %s",
+                        note,
+                        MODIFIED_NOTES_TABLE.get_timestamp(note).isoformat(),
+                    )
     except KeyboardInterrupt:
         logger.info("observer interrupted")
         observer.stop()
