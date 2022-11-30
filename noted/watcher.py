@@ -70,16 +70,16 @@ def update_git_repository() -> None:
     erase_files("*.*~")
     erase_files("crap*.*")
     erase_files(".#*")
-    git_path = Path(project_settings.notes_path).joinpath(".git")
-    if not git_path.exists():
-        logger.error("Unable to find .git directory.  Has it been initialized?")
-        return
-    repo = Repo(git_path)
-    git = repo.git
-    added = git.add("*.md")
-    logger.info(added)
-    committed = git.commit("-m Update:" + datetime.datetime.now().isoformat())
-    logger.info(committed)
+    # git_path = Path(project_settings.notes_path).joinpath(".git")
+    # if not git_path.exists():
+    #     logger.error("Unable to find .git directory.  Has it been initialized?")
+    #     return
+    # repo = Repo(git_path)
+    # git = repo.git
+    # added = git.add("*.md")
+    # logger.info(added)
+    # committed = git.commit("-m Update:" + datetime.datetime.now().isoformat())
+    # logger.info(committed)
 
 
 class NotedEventHandler(FileSystemEventHandler):
@@ -193,6 +193,7 @@ def handle_modified_event(evt: FileSystemEvent) -> None:
     logger.debug("handling %s", evt.src_path)
     MODIFIED_NOTES_TABLE.add_note(evt.src_path)
 
+
 def main():
     # clean up notes that haven't yet been put in the database
     logger.info("scanning files for notes that need to be loaded in the database")
@@ -259,8 +260,9 @@ def main():
         logger.info("observer interrupted")
         observer.stop()
     observer.join()
-    # update_git_repository()
+    update_git_repository()
     logger.info("watcher completed")
+
 
 if __name__ == "__main__":
     main()
