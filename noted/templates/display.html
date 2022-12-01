@@ -1,0 +1,125 @@
+{# provides a way to display notes without editing them #}
+{# expects the following variables to be set: #}
+{# config_found, filename, note_body #}
+{% extends "base.html" %} 
+
+{% block title %}Note Editor{% endblock %} 
+
+{% block head %} 
+    {{ super() }} 
+{% endblock %} 
+
+{% block content %} 
+{% if config_found == False %}
+<script>
+  window.addEventListener("load", function () {
+    window.location.replace(`${SERVER_URL}/noconfig`);
+  });
+</script>
+{% endif %}
+
+<h2 id="pageTitle">{{ filename }}</h2>
+<div
+  id="container"
+  style="width: 800px; height: 600px; border: 1px solid grey"
+  on
+></div>
+<button class="btn btn-primary" onclick="doStore();">Store</button>
+<div id="links-display"></div>
+{% endblock %} 
+
+{% block scripts %} 
+{{ super() }}
+<script src="/static/js/loader.js"></script>
+<script src="/static/js/editor.main.nls.js"></script>
+<script src="/static/js/editor.main.js"></script>
+<script src="/static/js/monaco-markdown.js"></script>
+<!-- $post("http://") -->
+<script type="application/javascript">
+  let READ_ONLY = false;
+
+  const setReadOnly= (value) => {
+    window.READ_ONLY = value;
+  }
+
+  const getReadOnly = () => { window.READ_ONLY; }
+
+  let noteBody = `{{note_body}}`
+  let editor = monaco.editor.create(document.getElementById("container"), {
+    language: "markdown-math",
+    value: "",
+    minimap: {
+      enabled: false,
+    },
+    fontSize: 16,
+    // theme: "vs-dark",
+    theme: "default",
+  });
+  require(["MonacoMarkdown"], function (MonacoMarkdown) {
+    var extension = new MonacoMarkdown.MonacoMarkdownExtension();
+    extension.activate(editor);
+  });
+  console.log("Note body :" + noteBody)
+  editor.getModel().setValue(noteBody);
+
+  
+  
+  // create a link based on the filename
+  const createNoteLink = function (filename) {
+    // return `<a  href='${SERVER_URL}/editor?filename=${filename}'>${filename}</a>`;
+    return `<a  href='#' onclick=displayNote(${filename})>${filename}</a>`;
+  };
+
+  const doFindNotes = function (stem) {
+    // call server to find the notes in the database that match the stem
+
+    data = { search_string: stem };
+    $.post(`${SERVER_URL}/api/findFilesInDatabase/`, data, function (data) {
+      let e = document.getElementById("links-display");
+      console.log(`Received: ${data}`);
+      console.log(typeof data);
+      keys = Object.keys(data);
+      console.log(`${typeof keys} ${keys.length}`);
+      let lines = [`<div><br/>Found ${keys.length} notes<br/>`];
+      lines.push("<ul class='list-group'>");
+      for (let i = 0; i < keys.length; i++) {
+        console.log(String(data[keys[i]]).trim());
+        let link = createNoteLink(String(data[keys[i]]).trim());
+        lines.push(`<li class="list-group-item">${link}</li>`);
+      }
+      lines.push("</ul></di>");
+
+      e.innerHTML = lines.join("\n");
+      // window.sessionStorage.setItem("last_search", lines.join("\n"));
+      closeNewNoteFormDiv();
+    });
+    // window.location.href = `${SERVER_URL}/editor?filename=${filename}`
+  };
+
+  // open a new window showing the new file
+  const displayNote = (filename) => {
+    alert("about to open: " + filename + " in a new window");
+  };
+
+  // display links to files in the database with names that start like the prefix of filename
+  const displayLinks = () => {
+    let filepath = window.sessionStorage.getItem("filename");
+    // const filename_re = /^(.*[\/\\])*([a-zA-Z]+)(\-\d+)*\.md/;
+    const filename_re = /^(.*[\/\\])*([a-zA-Z]+)(\-\d+)*/;
+    let items = filepath.match(filename_re);
+    // alert("item 0 " + items[0]);
+    // alert("item 1 " + items[1]);
+    // alert("item 2 " + items[2]);
+    // alert("item 3 " + items[3]);
+
+    // stem_re = /^(.+)[\-\.]/gm;
+    stem = items[2];
+    alert("displayLinks stem: " + stem);
+  };
+
+  const handleLink = (e) => {
+    alert(`link: ${e}`);
+  };
+
+  
+{% endblock %}

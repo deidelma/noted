@@ -236,7 +236,8 @@ content %} {% if config_found == False %}
 
   // create a link based on the filename
   const createNoteLink = function (filename) {
-    return `<a  href='${SERVER_URL}/editor?filename=${filename}&readonly=true'>${filename}</a>`;
+    // return `<a  href='${SERVER_URL}/editor?filename=${filename}&readonly=true'>${filename}</a>`;
+    return `<a  href='${SERVER_URL}/display?filename=${filename}'>${filename}</a>`;
   };
 
   // scan for new files and enter them in the database
@@ -258,6 +259,7 @@ content %} {% if config_found == False %}
       lines.push("<ul class='list-group'>");
       for (let i = 0; i < list.length; i++) {
         let link = createNoteLink(list[i].trim());
+        console.log("link: " + link);
         lines.push(`<li class="list-group-item">${link}</li>`);
       }
       lines.push("</ul></div>");
