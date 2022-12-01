@@ -11,9 +11,9 @@ from pathlib import Path
 from watchdog.events import FileSystemEvent, FileSystemEventHandler  # type: ignore
 from watchdog.observers import Observer  # type: ignore
 
-from git import Repo # type: ignore
+from git import Repo  # type: ignore
 
-from noted.database import already_stored
+from noted.database import already_stored, OverwriteAttemptError
 from noted.settings import load_configuration
 from noted.utils import create_logger
 from noted.searches import do_scan, process_file
@@ -70,16 +70,17 @@ def update_git_repository() -> None:
     erase_files("*.*~")
     erase_files("crap*.*")
     erase_files(".#*")
-    git_path = Path(project_settings.notes_path).joinpath(".git")
-    if not git_path.exists():
-        logger.error("Unable to find .git directory.  Has it been initialized?")
-        return
-    repo = Repo(git_path)
-    git = repo.git
-    added = git.add("*.md")
-    logger.info(added)
-    committed = git.commit("-m Update:" + datetime.datetime.now().isoformat())
-    logger.info(committed)
+    # git_path = Path(project_settings.notes_path).joinpath(".git")
+    # if not git_path.exists():
+    #     logger.error("Unable to find .git directory.  Has it been initialized?")
+    #     return
+    # repo = Repo(git_path)
+    # git = repo.git
+    # added = git.add("*.md")
+    # logger.info(added)
+    # committed = git.commit("-m Update:" + datetime.datetime.now().isoformat())
+    # logger.info(committed)
+
 
 class NotedEventHandler(FileSystemEventHandler):
     """Custom event handler for the noted system.  Only tracks created and modified events"""
@@ -192,6 +193,7 @@ def handle_modified_event(evt: FileSystemEvent) -> None:
     logger.debug("handling %s", evt.src_path)
     MODIFIED_NOTES_TABLE.add_note(evt.src_path)
 
+
 def main():
     # clean up notes that haven't yet been put in the database
     logger.info("scanning files for notes that need to be loaded in the database")
@@ -248,12 +250,19 @@ def main():
                 except IOError:
                     logger.fatal("Fatal error: Unable to read file %s.", note)
                     sys.exit(1)
+                except OverwriteAttemptError:
+                    logger.info(
+                        "Attempt to overwrite existing record: %s %s",
+                        note,
+                        MODIFIED_NOTES_TABLE.get_timestamp(note).isoformat(),
+                    )
     except KeyboardInterrupt:
         logger.info("observer interrupted")
         observer.stop()
     observer.join()
     update_git_repository()
     logger.info("watcher completed")
+
 
 if __name__ == "__main__":
     main()
