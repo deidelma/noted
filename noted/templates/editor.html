@@ -22,6 +22,14 @@ False %}
 <script src="/static/js/monaco-markdown.js"></script>
 <!-- $post("http://") -->
 <script type="application/javascript">
+  let READ_ONLY = false;
+
+  const setReadOnly= (value) => {
+    window.READ_ONLY = value;
+  }
+
+  const getReadOnly = () => { window.READ_ONLY; }
+
   var editor = monaco.editor.create(document.getElementById("container"), {
     language: "markdown-math",
     value: "",
@@ -39,6 +47,10 @@ False %}
 
   // store the file on the disk
   const doStore = function () {
+    // no need to store if this a readonly file
+    if(window.READ_ONLY){
+      return;
+    }
     let text = editor.getValue();
     let data = { text: text, filename: window.sessionStorage.getItem("filename") };
     console.log(data);
@@ -145,6 +157,10 @@ False %}
   document.addEventListener("DOMContentLoaded", function () {
     window.sessionStorage.setItem("editor_text", "");
     let filename = GetURLParameter("filename");
+    let readonly = GetURLParameter("readonly") === "true";
+    console.log("readonly is " + readonly);
+    window.READ_ONLY = readonly;
+    console.log("READ_ONLY is" + window.READ_ONLY);
     let title = document.getElementById("pageTitle");
     $.post(
       `${SERVER_URL}/api/fullPath/`,
@@ -173,9 +189,13 @@ False %}
         );
         title.innerHTML = `<span style="font-size:small">${filename}</style>`;
         window.sessionStorage.setItem("filename", filename);
+        console.log("Is it? " + window.READ_ONLY)
+        editor.updateOptions({readOnly: window.READ_ONLY});
         editor.getModel().setValue(String(data.text));
-        editor.updateOptions({ readOnly: false });
-        //displayLinks();
+        // need to undo * after value is set
+        if(window.READ_ONLY){
+          title.innerHTML = `<span style="font-size:small">${filename} -- READ ONLY</style>`
+        }
       }
     });
     console.log("completed event listener");

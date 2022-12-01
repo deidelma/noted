@@ -222,7 +222,7 @@ content %} {% if config_found == False %}
         writtenFilename = String(data.filename);
       }
       if (writtenFilename.length > 0) {
-        window.location.href = `${SERVER_URL}/editor?filename=${writtenFilename}`;
+        window.location.href = `${SERVER_URL}/editor?filename=${writtenFilename}&readonly=false`;
       }
     });
   };
@@ -236,7 +236,7 @@ content %} {% if config_found == False %}
 
   // create a link based on the filename
   const createNoteLink = function (filename) {
-    return `<a  href='${SERVER_URL}/editor?filename=${filename}'>${filename}</a>`;
+    return `<a  href='${SERVER_URL}/editor?filename=${filename}&readonly=true'>${filename}</a>`;
   };
 
   // scan for new files and enter them in the database
