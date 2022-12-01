@@ -27,14 +27,13 @@ project_settings = load_configuration()
 
 PORT = 5823
 SERVER_URL = f"http://localhost:{PORT}/"
-
 STATIC_PATH = Path(__file__).absolute().parent.joinpath("static")
 TEMPLATES_PATH = Path(__file__).absolute().parent.joinpath("templates")
 logger.debug("Loading templates from %s", TEMPLATES_PATH.as_posix())
 STATIC_JS = STATIC_PATH.joinpath("js")
-STATIC_CSS= STATIC_PATH.joinpath("css")
-STATIC_ICONS=STATIC_PATH.joinpath("icons")
-STATIC_FONTS=STATIC_PATH.joinpath("fonts")
+STATIC_CSS = STATIC_PATH.joinpath("css")
+STATIC_ICONS = STATIC_PATH.joinpath("icons")
+STATIC_FONTS = STATIC_PATH.joinpath("fonts")
 logger.debug("static js: %s", STATIC_JS.as_posix())
 
 view = partial(jinja2_view, template_lookup=[TEMPLATES_PATH])
@@ -119,6 +118,17 @@ def about() -> dict[str, bool]:
 @view("editor.html")
 def editor() -> dict[str, bool]:
     return dict(config_found=CONFIG_FILE_EXISTS)
+
+
+@app.route("/display")
+@view("display.html")
+def display() -> dict[str, bool | str]:
+    params = request.params.get('filename')
+    return {
+        "config_found": CONFIG_FILE_EXISTS,
+        "filename": params,
+        "note_body": "# hello\n\n## a heading\n-some info",
+    }
 
 
 def terminal_process(delay=2):
