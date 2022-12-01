@@ -70,16 +70,16 @@ def update_git_repository() -> None:
     erase_files("*.*~")
     erase_files("crap*.*")
     erase_files(".#*")
-    # git_path = Path(project_settings.notes_path).joinpath(".git")
-    # if not git_path.exists():
-    #     logger.error("Unable to find .git directory.  Has it been initialized?")
-    #     return
-    # repo = Repo(git_path)
-    # git = repo.git
-    # added = git.add("*.md")
-    # logger.info(added)
-    # committed = git.commit("-m Update:" + datetime.datetime.now().isoformat())
-    # logger.info(committed)
+    git_path = Path(project_settings.notes_path).joinpath(".git")
+    if not git_path.exists():
+        logger.error("Unable to find .git directory.  Has it been initialized?")
+        return
+    repo = Repo(git_path)
+    git = repo.git
+    added = git.add("*.md")
+    logger.info(added)
+    committed = git.commit("-m Update:" + datetime.datetime.now().isoformat())
+    logger.info(committed)
 
 
 class NotedEventHandler(FileSystemEventHandler):
