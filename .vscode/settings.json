@@ -4,6 +4,7 @@
     "codicon",
     "codicons",
     "dotenv",
+    "findfiles",
     "levelname",
     "noconfig",
     "sqlalchemy"
