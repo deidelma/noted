@@ -123,11 +123,20 @@ def editor() -> dict[str, bool]:
 @app.route("/display")
 @view("display.html")
 def display() -> dict[str, bool | str]:
-    params = request.params.get('filename')
+    filename = request.params.get('filename')
+    logger.debug("get: received request for filename: %s", filename)
+    note_path = Path(project_settings.notes_path).joinpath(filename)
+    try:
+        with open(note_path, "r", encoding="utf-8") as file:
+            text = file.read()
+        logger.info("loaded file: %s", note_path.as_posix())
+    except FileNotFoundError:
+        logger.warning("unable to find file named: %s", filename)
+        text = "ERROR:NOT FOUND"
     return {
         "config_found": CONFIG_FILE_EXISTS,
-        "filename": params,
-        "note_body": "# hello\n\n## a heading\n-some info",
+        "filename": filename,
+        "note_body": text,
     }
 
 
