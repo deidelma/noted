@@ -1,4 +1,4 @@
-let READ_ONLY = false;
+/// provides the specific javascript routines for the display endpoint
 
 const editor = monaco.editor.create(document.getElementById("container"), {
   language: "markdown-math",
