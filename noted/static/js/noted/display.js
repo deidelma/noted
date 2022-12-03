@@ -11,6 +11,11 @@ const create_editor = (elementName) => {
     //   theme: "vs-dark",
     theme: "default",
     // readOnly: "true",
+    lineNumbers: "on",
+    dragAndDrop: "true",
+    autoClosingQuotes: "beforeWhitespace",
+    autoClosingBrackets: "beforeWhitespace",
+    suggestSelection: "recentlyUsed",
   });
   require(["MonacoMarkdown"], function (MonacoMarkdown) {
     const extension = new MonacoMarkdown.MonacoMarkdownExtension();
