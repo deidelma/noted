@@ -162,10 +162,19 @@ def remove_crap(stems: list[str] | None = None):
         count += 1
     logger.info("removed %d crap files", count)
 
+def update_database():
+    result, number_updated = do_scan()
+    if result != 0:
+        logger.fatal(
+            "fatal error: unable to scan directory %s", project_settings.notes_path
+        )
+        sys.exit(1)
+    logger.info("updated %d files", number_updated)
 
 def terminal_process(delay=2):
     print("server shutting down", file=sys.stderr)
     remove_crap()
+    update_database()
     time.sleep(delay)
     signal.raise_signal(signal.SIGINT)
 
