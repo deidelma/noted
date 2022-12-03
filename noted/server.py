@@ -123,7 +123,7 @@ def editor() -> dict[str, bool]:
 @app.route("/display")
 @view("display.html")
 def display() -> dict[str, bool | str]:
-    filename = request.params.get('filename')
+    filename = request.params.get("filename")
     logger.debug("get: received request for filename: %s", filename)
     note_path = Path(project_settings.notes_path).joinpath(filename)
     try:
@@ -140,9 +140,33 @@ def display() -> dict[str, bool | str]:
     }
 
 
+def remove_crap(stems: list[str] | None = None):
+    """
+    Remove files starting with the stem 'crap' or others.
+
+    Also removes emacs backup files ending in ~
+    """
+    notes_path = Path(project_settings.notes_path)
+    count = 0
+    if stems is None:
+        stems = ["crap"]
+    for stem in stems:
+        files = notes_path.glob(f"{stem}*.*")
+        for file in files:
+            file.unlink(True)
+            count += 1
+    # remove emacs backup files
+    files = notes_path.glob("*.*~")
+    for file in files:
+        file.unlink(True)
+        count += 1
+    logger.info("removed %d crap files", count)
+
+
 def terminal_process(delay=2):
-    time.sleep(delay)
     print("server shutting down", file=sys.stderr)
+    remove_crap()
+    time.sleep(delay)
     signal.raise_signal(signal.SIGINT)
 
 
