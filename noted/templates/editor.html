@@ -13,46 +13,29 @@ False %}
   style="width: 800px; height: 600px; border: 1px solid grey"
   on
 ></div>
-<button class="btn btn-primary" onclick="doStore();">Store</button>
+
 <div id="links-display"></div>
 {% endblock %} {% block scripts %} {{ super() }}
 <script src="/static/js/loader.js"></script>
 <script src="/static/js/editor.main.nls.js"></script>
 <script src="/static/js/editor.main.js"></script>
 <script src="/static/js/monaco-markdown.js"></script>
-<!-- $post("http://") -->
+<script src="/static/js/noted/display.js"></script>
 <script type="application/javascript">
-  let READ_ONLY = false;
-
-  const setReadOnly= (value) => {
-    window.READ_ONLY = value;
-  }
-
-  const getReadOnly = () => { window.READ_ONLY; }
-
-  var editor = monaco.editor.create(document.getElementById("container"), {
-    language: "markdown-math",
-    value: "",
-    minimap: {
-      enabled: false,
-    },
-    fontSize: 16,
-    // theme: "vs-dark",
-    theme: "default",
-  });
-  require(["MonacoMarkdown"], function (MonacoMarkdown) {
-    var extension = new MonacoMarkdown.MonacoMarkdownExtension();
-    extension.activate(editor);
-  });
+  // need to make editor a global for use by callbacks
+  const editor = create_editor("container");
 
   // store the file on the disk
   const doStore = function () {
     // no need to store if this a readonly file
-    if(window.READ_ONLY){
+    if (window.READ_ONLY) {
       return;
     }
     let text = editor.getValue();
-    let data = { text: text, filename: window.sessionStorage.getItem("filename") };
+    let data = {
+      text: text,
+      filename: window.sessionStorage.getItem("filename"),
+    };
     console.log(data);
     $.post(`${SERVER_URL}/api/store/`, data, function (data) {
       console.log("Received store" + data);
@@ -140,10 +123,6 @@ False %}
     // const filename_re = /^(.*[\/\\])*([a-zA-Z]+)(\-\d+)*\.md/;
     const filename_re = /^(.*[\/\\])*([a-zA-Z]+)(\-\d+)*/;
     let items = filepath.match(filename_re);
-    // alert("item 0 " + items[0]);
-    // alert("item 1 " + items[1]);
-    // alert("item 2 " + items[2]);
-    // alert("item 3 " + items[3]);
 
     // stem_re = /^(.+)[\-\.]/gm;
     stem = items[2];
@@ -157,10 +136,6 @@ False %}
   document.addEventListener("DOMContentLoaded", function () {
     window.sessionStorage.setItem("editor_text", "");
     let filename = GetURLParameter("filename");
-    let readonly = GetURLParameter("readonly") === "true";
-    console.log("readonly is " + readonly);
-    window.READ_ONLY = readonly;
-    console.log("READ_ONLY is" + window.READ_ONLY);
     let title = document.getElementById("pageTitle");
     $.post(
       `${SERVER_URL}/api/fullPath/`,
@@ -187,15 +162,9 @@ False %}
             String(data.text).length +
             ")"
         );
+        display_note(editor, String(data.text), false);
         title.innerHTML = `<span style="font-size:small">${filename}</style>`;
         window.sessionStorage.setItem("filename", filename);
-        console.log("Is it? " + window.READ_ONLY)
-        editor.updateOptions({readOnly: window.READ_ONLY});
-        editor.getModel().setValue(String(data.text));
-        // need to undo * after value is set
-        if(window.READ_ONLY){
-          title.innerHTML = `<span style="font-size:small">${filename} -- READ ONLY</style>`
-        }
       }
     });
     console.log("completed event listener");

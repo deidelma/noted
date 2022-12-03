@@ -22,10 +22,12 @@ extends "base.html" %} {% block title %}Note Editor{% endblock %} {% block head
 <script src="/static/js/editor.main.nls.js"></script>
 <script src="/static/js/editor.main.js"></script>
 <script src="/static/js/monaco-markdown.js"></script>
-<script type="application/javascript">
-  let noteBody = "" + `{{note_body}}`;
-</script>
+<script src="/static/js/noted/display.js"></script>
 
-<script src="/static/js/display.js" type="application/javascript"></script>
+<script type="application/javascript">
+  let editor = create_editor("container");
+  let noteBody = "" + `{{note_body}}`;
+  display_note(editor, noteBody, true);
+</script>
 
 {% endblock %}
