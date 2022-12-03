@@ -182,6 +182,9 @@ def add_note(eng: Engine, note: Note) -> int:
         eng: the connection to the database
         note: the note to be added
 
+    Exceptions:
+        OverwriteAttemptError when trying to overwrite an existing file
+        
     Returns: the id of the inserted note
     """
     with eng.begin() as conn:
