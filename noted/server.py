@@ -162,6 +162,7 @@ def remove_crap(stems: list[str] | None = None):
         count += 1
     logger.info("removed %d crap files", count)
 
+
 def update_database():
     result, number_updated = do_scan()
     if result != 0:
@@ -170,6 +171,7 @@ def update_database():
         )
         sys.exit(1)
     logger.info("updated %d files", number_updated)
+
 
 def terminal_process(delay=2):
     print("server shutting down", file=sys.stderr)
@@ -235,7 +237,7 @@ def create():
     return {"result": f"success writing ({len(text)} chars)", "filename": filename}
 
 
-@app.route("/api/findfiles/", method="post")
+@app.route("/api/findfiles", method="post")
 def find_files():
     """Returns the names of files corresponding to the provided search string"""
     logger.info("received request to find files on disk based on a search")
@@ -323,9 +325,25 @@ def store():
         return {"result": "error writing file"}
 
 
+@app.route("/api/stem", method=['get','post'])
+def list_notes_by_stem():
+    """Returns a list of notes on the disk based on the stem"""
+    logger.debug("in list_notes_by_stem")
+    stem = request.params["search_string"]
+    logger.debug("received request to list files based on stem: %s", stem)
+    notes = sorted(
+        Path(project_settings.notes_path).glob(f"{stem}*.md"),
+        key=os.path.getmtime,
+        reverse=True,
+    )
+    data = {"notes": [note.name for note in notes]}
+    response.content_type = "application/json"
+    return dumps(data)
+
+
 @app.route("/api/list")
 def list_notes():
-    """Returns a list of notes stored in the database"""
+    """Returns a list of notes on the disk"""
     logger.info("received request to list files on disk")
     # note_list = ['lesley-20220830.md', 'bob-20210723.md', 'harry-20221212.md']
     # data = {'notes':note_list}
