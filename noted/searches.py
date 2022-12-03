@@ -11,7 +11,7 @@ import sqlalchemy.engine
 from sqlalchemy import select
 
 from noted import database
-from noted.database import notes
+from noted.database import OverwriteAttemptError, notes
 from noted.notes import Note
 from noted.settings import load_configuration
 from noted.utils import create_logger
@@ -53,14 +53,19 @@ def process_file(engine: sqlalchemy.engine.Engine, file_path: Path) -> None:
         engine (Engine): the currently active database connection.
         file_path (Path): the path to the file
     Exceptions:
-        Throws IOError if file cannot be read
+        IOError if file cannot be read
+        OverwriteAttemptError if trying to overwrite an existing record
     """
     logger.debug("Reading file %s", file_path)
     data = Note.load_file(file_path)
     note = Note.create_note_from_markdown(data.body)
     note.filename = file_path.name
     note.timestamp = data.timestamp
-    database.add_note(engine, note)
+    try:
+        database.add_note(engine, note)
+    except OverwriteAttemptError:
+        logger.error("attempt to overwrite existing file: %s", f"{note.filename} {note.timestamp}")
+        return
     logger.debug("Note %s added to database.", note.filename)
 
 
