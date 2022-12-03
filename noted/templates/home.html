@@ -130,7 +130,6 @@ content %} {% if config_found == False %}
       // localStorage.setItem("last_search", lines.join("\n"));
       closeNewNoteFormDiv();
     });
-    // window.location.href = `${SERVER_URL}/editor?filename=${filename}`
   };
 
   const doFindDatabaseEntries = function () {
@@ -160,7 +159,6 @@ content %} {% if config_found == False %}
       // localStorage.setItem("last_search", lines.join("\n"));
       closeNewNoteFormDiv();
     });
-    // window.location.href = `${SERVER_URL}/editor?filename=${filename}`
   };
 
   const doFindNoteInDatabase = function () {
@@ -222,7 +220,7 @@ content %} {% if config_found == False %}
         writtenFilename = String(data.filename);
       }
       if (writtenFilename.length > 0) {
-        window.location.href = `${SERVER_URL}/editor?filename=${writtenFilename}&readonly=false`;
+        window.location.href = `${SERVER_URL}/editor?filename=${writtenFilename}`;
       }
     });
   };
@@ -236,7 +234,6 @@ content %} {% if config_found == False %}
 
   // create a link based on the filename
   const createNoteLink = function (filename) {
-    // return `<a  href='${SERVER_URL}/editor?filename=${filename}&readonly=true'>${filename}</a>`;
     return `<a  href='${SERVER_URL}/display?filename=${filename}'>${filename}</a>`;
   };
 

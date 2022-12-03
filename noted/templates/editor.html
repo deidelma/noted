@@ -14,7 +14,7 @@ False %}
   on
 ></div>
 
-<div id="links-display"></div>
+<div id="other-links">No Links</div>
 {% endblock %} {% block scripts %} {{ super() }}
 <script src="/static/js/loader.js"></script>
 <script src="/static/js/editor.main.nls.js"></script>
@@ -80,59 +80,22 @@ False %}
     window.sessionStorage.removeItem("editor_text");
   });
 
+  const doLink = function (filename) {
+    alert("doLink");
+    window.open(`${SERVER_URL}/display?filename=${filename}`, "_blank");
+  };
   // create a link based on the filename
-  const createNoteLink = function (filename) {
-    // return `<a  href='${SERVER_URL}/editor?filename=${filename}'>${filename}</a>`;
-    return `<a  href='#' onclick=displayNote(${filename})>${filename}</a>`;
+  const createLink = function (filename) {
+    // return `<a href="#" onclick="doLink(${filename})">${filename}</a>`;
+    return `<a href=${SERVER_URL}/display?filename=${filename}>${filename}</a>`;
   };
 
-  const doFindNotes = function (stem) {
-    // call server to find the notes in the database that match the stem
-
-    data = { search_string: stem };
-    $.post(`${SERVER_URL}/api/findFilesInDatabase/`, data, function (data) {
-      let e = document.getElementById("links-display");
-      console.log(`Received: ${data}`);
-      console.log(typeof data);
-      keys = Object.keys(data);
-      console.log(`${typeof keys} ${keys.length}`);
-      let lines = [`<div><br/>Found ${keys.length} notes<br/>`];
-      lines.push("<ul class='list-group'>");
-      for (let i = 0; i < keys.length; i++) {
-        console.log(String(data[keys[i]]).trim());
-        let link = createNoteLink(String(data[keys[i]]).trim());
-        lines.push(`<li class="list-group-item">${link}</li>`);
-      }
-      lines.push("</ul></di>");
-
-      e.innerHTML = lines.join("\n");
-      // window.sessionStorage.setItem("last_search", lines.join("\n"));
-      closeNewNoteFormDiv();
-    });
-    // window.location.href = `${SERVER_URL}/editor?filename=${filename}`
+  const displayLinksToSimilarFiles = () => {
+    let stem = get_stem(window.sessionStorage["filename"]);
+    if (stem) {
+      find_notes_by_stem(stem, "other-links");
+    }
   };
-
-  // open a new window showing the new file
-  const displayNote = (filename) => {
-    alert("about to open: " + filename + " in a new window");
-  };
-
-  // display links to files in the database with names that start like the prefix of filename
-  const displayLinks = () => {
-    let filepath = window.sessionStorage.getItem("filename");
-    // const filename_re = /^(.*[\/\\])*([a-zA-Z]+)(\-\d+)*\.md/;
-    const filename_re = /^(.*[\/\\])*([a-zA-Z]+)(\-\d+)*/;
-    let items = filepath.match(filename_re);
-
-    // stem_re = /^(.+)[\-\.]/gm;
-    stem = items[2];
-    alert("displayLinks stem: " + stem);
-  };
-
-  const handleLink = (e) => {
-    alert(`link: ${e}`);
-  };
-
   document.addEventListener("DOMContentLoaded", function () {
     window.sessionStorage.setItem("editor_text", "");
     let filename = GetURLParameter("filename");
@@ -165,6 +128,7 @@ False %}
         display_note(editor, String(data.text), false);
         title.innerHTML = `<span style="font-size:small">${filename}</style>`;
         window.sessionStorage.setItem("filename", filename);
+        displayLinksToSimilarFiles();
       }
     });
     console.log("completed event listener");
