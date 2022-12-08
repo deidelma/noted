@@ -4,8 +4,6 @@ import time
 import datetime
 from pathlib import Path
 
-from flask import Flask, request
-
 from noted.database import connect_to_database, find_all_notes, find_notes_by_filename
 from noted.notes import Note
 from noted.searches import do_scan
