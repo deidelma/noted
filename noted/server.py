@@ -210,7 +210,7 @@ def create_list_from_word_string(word_string: str) -> list[str]:
 @app.route("/api/create/", method="post")
 def create():
     """Creates a new note with the provided parameters"""
-    logger.info("received request to create a note")
+    logger.debug("received request to create a note")
     filename: str = request.params["filename"]  # type:ignore
     keywords = request.params["keywords"]  # type:ignore
     present = request.params["present"]  # type:ignore
@@ -234,13 +234,14 @@ def create():
             logger.debug("wrote %d chars to disk", len(text))
     except IOError:
         return {"result": f"error encountered while writing {filename}"}
+    logger.info("created file:%s", filename)
     return {"result": f"success writing ({len(text)} chars)", "filename": filename}
 
 
 @app.route("/api/findfiles", method="post")
 def find_files():
     """Returns the names of files corresponding to the provided search string"""
-    logger.info("received request to find files on disk based on a search")
+    logger.debug("received request to find files on disk based on a search")
     key: str = str(request.params["search_string"]).lower()  # type:ignore
     logger.debug("received request to search for files starting with '%s'", key)
     if not key.endswith("*"):
@@ -308,7 +309,7 @@ def full_path():
 @app.route("/api/store/", method="post")
 def store():
     """Called when data is to be stored on disk, after a change."""
-    logger.info("received request to store a file on disk")
+    logger.debug("received request to store a file on disk")
     text: str = request.params["text"]  # type:ignore
     filename: str = request.params["filename"]  # type:ignore
     if not filename:
@@ -319,17 +320,18 @@ def store():
             # logger.debug("file: %s storing: %s", filename, text)
             logger.debug("writing %d bytes to file: %s", len(text), filename)
             file.write(text)
+        logger.debug("stored file: %s", filename)
         return {"result": f"success writing file {filename} ({len(text)} chars)"}
     except IOError:
         logger.debug("error encountered while attempting to write file: %s", filename)
         return {"result": "error writing file"}
 
 
-@app.route("/api/stem", method=['get','post'])
+@app.route("/api/stem", method=['get','post']) # type: ignore
 def list_notes_by_stem():
     """Returns a list of notes on the disk based on the stem"""
     logger.debug("in list_notes_by_stem")
-    stem = request.params["search_string"]
+    stem = request.params["search_string"] # type: ignore
     logger.debug("received request to list files based on stem: %s", stem)
     notes = sorted(
         Path(project_settings.notes_path).glob(f"{stem}*.md"),
@@ -351,8 +353,7 @@ def list_notes():
     notes = sorted(
         Path(project_settings.notes_path).glob("*.md"),
         key=os.path.getmtime,
-        reverse=True,
-    )
+        reverse=True,)
     data = {"notes": [note.name for note in notes]}
     response.content_type = "application/json"
     return dumps(data)
