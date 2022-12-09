@@ -1,30 +1,14 @@
-attrs==22.1.0
-black==22.10.0
 bottle==0.12.23
-click==8.1.3
-colorama==0.4.6
-exceptiongroup==1.0.1
-gitdb==4.0.9
+gitdb==4.0.10
 GitPython==3.1.29
 greenlet==2.0.1
-iniconfig==1.1.1
-itsdangerous==2.1.2
 Jinja2==3.1.2
 Markdown==3.4.1
 MarkupSafe==2.1.1
-mypy==0.991
-mypy-extensions==0.4.3
--e git+https://github.com/deidelma/noted.git@27b4aeceda209edfd4b46bc375170ea4f2345440#egg=noted
-packaging==21.3
-pathspec==0.10.2
-platformdirs==2.5.4
-pluggy==1.0.0
+-e git+https://github.com/deidelma/noted.git@bbd0d75cda172e9d6ef320349a48d88b2adc0c35#egg=noted
 pydantic==1.10.2
-pyparsing==3.0.9
-pytest==7.2.0
 python-dotenv==0.21.0
 smmap==5.0.0
 SQLAlchemy==1.4.44
-tomli==2.0.1
 typing_extensions==4.4.0
-watchdog==2.1.9
+watchdog==2.2.0
