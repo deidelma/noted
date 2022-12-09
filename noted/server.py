@@ -35,6 +35,7 @@ STATIC_CSS = STATIC_PATH.joinpath("css")
 STATIC_ICONS = STATIC_PATH.joinpath("icons")
 STATIC_FONTS = STATIC_PATH.joinpath("fonts")
 logger.debug("static js: %s", STATIC_JS.as_posix())
+JSON_TYPE = "application/json"
 
 view = partial(jinja2_view, template_lookup=[TEMPLATES_PATH])
 
@@ -123,7 +124,7 @@ def editor() -> dict[str, bool]:
 @app.route("/display")
 @view("display.html")
 def display() -> dict[str, bool | str]:
-    filename = request.params.get("filename")
+    filename = request.params.get("filename") # type: ignore
     logger.debug("get: received request for filename: %s", filename)
     note_path = Path(project_settings.notes_path).joinpath(filename)
     try:
@@ -163,7 +164,7 @@ def remove_crap(stems: list[str] | None = None):
     logger.info("removed %d crap files", count)
 
 
-def update_database():
+def do_update_database():
     result, number_updated = do_scan()
     if result != 0:
         logger.fatal(
@@ -176,7 +177,7 @@ def update_database():
 def terminal_process(delay=2):
     print("server shutting down", file=sys.stderr)
     remove_crap()
-    update_database()
+    do_update_database()
     time.sleep(delay)
     signal.raise_signal(signal.SIGINT)
 
@@ -252,7 +253,7 @@ def find_files():
     # file_list = [file.name for file in file_paths]
     data = {i: item for i, item in enumerate(file.name for file in file_paths)}
     logger.debug("found %d files with search string: %s", len(data), key)
-    response.content = "application/json"  # type:ignore
+    response.content = JSON_TYPE # type: ignore
     return data
 
 
@@ -272,7 +273,7 @@ def find_files_in_database():
         note_list = find_notes_by_filename(eng, key, wildcard=True)
     data = {i: item for i, item in enumerate(note.filename for note in note_list)}
     logger.debug("found %d notes in database", len(data))
-    response.content = "application/json"  # type:ignore
+    response.content = JSON_TYPE  # type:ignore
     return data
 
 
@@ -289,7 +290,7 @@ def get():
     except FileNotFoundError:
         logger.warning("unable to find file named: %s", filename)
         text = "ERROR:NOT FOUND"
-    response.content_type = "application/json"
+    response.content_type = JSON_TYPE 
     data = {"text": text}
     return dumps(data)
 
@@ -339,7 +340,7 @@ def list_notes_by_stem():
         reverse=True,
     )
     data = {"notes": [note.name for note in notes]}
-    response.content_type = "application/json"
+    response.content_type = JSON_TYPE
     return dumps(data)
 
 
@@ -355,7 +356,7 @@ def list_notes():
         key=os.path.getmtime,
         reverse=True,)
     data = {"notes": [note.name for note in notes]}
-    response.content_type = "application/json"
+    response.content_type = JSON_TYPE
     return dumps(data)
 
 
