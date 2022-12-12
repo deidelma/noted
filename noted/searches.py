@@ -149,7 +149,10 @@ def process_files(
                 logger.critical("Error reading %s", f"{the_file}")
                 return 1, 0
     logger.debug("Updated database with data from %d files.", len(files))
-    logger.info("Updated %d files.", update_count)
+    if update_count > 0:
+        logger.info("Updated %d files.", update_count)
+    else:
+        logger.info("No files to update.")
     # debug("logged")
     return 0, update_count
 

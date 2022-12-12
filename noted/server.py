@@ -160,23 +160,25 @@ def remove_crap(stems: list[str] | None = None):
     for file in files:
         file.unlink(True)
         count += 1
-    logger.info("removed %d crap files", count)
+    if count > 0:
+        logger.info("removed %d crap files", count)
 
 
-def update_database():
+def update_database_before_exiting():
     result, number_updated = do_scan()
     if result != 0:
         logger.fatal(
             "fatal error: unable to scan directory %s", project_settings.notes_path
         )
         sys.exit(1)
-    logger.info("updated %d files", number_updated)
+    if number_updated > 0:
+        logger.info("updated %d files before exiting", number_updated)
 
 
 def terminal_process(delay=2):
     print("server shutting down", file=sys.stderr)
     remove_crap()
-    update_database()
+    update_database_before_exiting()
     time.sleep(delay)
     signal.raise_signal(signal.SIGINT)
 
@@ -327,11 +329,11 @@ def store():
         return {"result": "error writing file"}
 
 
-@app.route("/api/stem", method=['get','post']) # type: ignore
+@app.route("/api/stem", method=["get", "post"])  # type: ignore
 def list_notes_by_stem():
     """Returns a list of notes on the disk based on the stem"""
     logger.debug("in list_notes_by_stem")
-    stem = request.params["search_string"] # type: ignore
+    stem = request.params["search_string"]  # type: ignore
     logger.debug("received request to list files based on stem: %s", stem)
     notes = sorted(
         Path(project_settings.notes_path).glob(f"{stem}*.md"),
@@ -353,16 +355,17 @@ def list_notes():
     notes = sorted(
         Path(project_settings.notes_path).glob("*.md"),
         key=os.path.getmtime,
-        reverse=True,)
+        reverse=True,
+    )
     data = {"notes": [note.name for note in notes]}
     response.content_type = "application/json"
     return dumps(data)
 
 
 @app.route("/api/updateDatabase", method="GET")
-def update_database():
+def update():
     """Updates the database with files in the currently active notes directory"""
-    logger.info("received request to update the database")
+    logger.debug("received request to update the database")
     result, number_updated = do_scan(exclude=["crap"])
     if result == 0:
         return {"result": "success", "count": number_updated}

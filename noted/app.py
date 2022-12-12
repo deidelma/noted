@@ -2,7 +2,13 @@
 import webbrowser
 import time
 from signal import SIGINT, signal
-from noted.server import launch_server, SERVER_URL, stop_server
+from noted.server import (
+    launch_server,
+    SERVER_URL,
+    stop_server,
+    remove_crap,
+    update_database_before_exiting,
+)
 from noted.utils import create_logger
 
 logger = create_logger(__name__)
@@ -10,9 +16,12 @@ logger = create_logger(__name__)
 
 def interrupt_handler(signal_number, frame) -> None:
     logger.debug("received signal %d from frame %s", signal_number, f"{frame}")
-    print("\nserver shutting down")
+    logger.info("server shutting down")
     stop_server()
-    print("shutdown complete")
+    remove_crap()
+    logger.info("updating database")
+    update_database_before_exiting()
+    logger.info("shutdown complete")
     exit(0)
 
 
@@ -30,13 +39,16 @@ def mainloop(launch_browser: bool = False):
     while True:
         time.sleep(0.1)
 
+
 def run():
     """Called to run the server and launch a browser"""
     mainloop(True)
 
+
 def serve():
     """Called to run the server"""
     mainloop(False)
+
 
 if __name__ == "__main__":
     mainloop(launch_browser=False)
