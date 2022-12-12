@@ -14,8 +14,11 @@ extends "base.html" %} {% block title %}Note Display{% endblock %} {% block head
 <div
   id="container"
   style="width: 800px; height: 600px; border: 1px solid grey"
-  on
 ></div>
+<div>
+  <br/>
+  <button class="btn btn-primary" id="edit_button" onclick="edit_note()">Edit</button>
+</div>
 <div id="links-display"></div>
 {% endblock %} {% block scripts %} {{ super() }}
 <script src="/static/js/loader.js"></script>
@@ -31,6 +34,10 @@ extends "base.html" %} {% block title %}Note Display{% endblock %} {% block head
   let stem = get_stem("{{filename}}");
   if (stem) {
     find_notes_by_stem(stem, "links-display");
+  }
+
+  const edit_note = () => {
+    window.location.assign(`${SERVER_URL}/editor?filename={{filename}}`);
   }
 </script>
 

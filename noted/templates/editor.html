@@ -7,7 +7,7 @@ False %}
   });
 </script>
 {% endif %}
-<h2 id="pageTitle">Monaco Markdown</h2>
+<h2 id="pageTitle">{{filename}}</h2>
 <div
   id="container"
   style="width: 800px; height: 600px; border: 1px solid grey"
@@ -24,6 +24,8 @@ False %}
 <script type="application/javascript">
   // need to make editor a global for use by callbacks
   const editor = create_editor("container");
+  let noteBody = "" + `{{text}}`
+  display_note(editor, noteBody, false);
 
   // store the file on the disk
   const doStore = function () {
@@ -99,39 +101,20 @@ False %}
   document.addEventListener("DOMContentLoaded", function () {
     window.sessionStorage.setItem("editor_text", "");
     let filename = GetURLParameter("filename");
-    let title = document.getElementById("pageTitle");
     $.post(
       `${SERVER_URL}/api/fullPath/`,
       { filename: filename },
       function (data) {
         filename = String(data.path);
         console.log("get full path: " + filename);
+        window.sessionStorage.setItem("filename", filename);
       }
     );
-    data = { filename: filename };
-    console.log("about to load: " + filename);
-    $.post(`${SERVER_URL}/api/get/`, data, function (data) {
-      let text = String(data.text);
-      if (text.startsWith("ERROR")) {
-        console.log("server reports an error while loading: " + filename);
-        window.sessionStorage.setItem("filename", "");
-        title.innerHTML = `<span style="font-size:small; color:red">Unable to find ${filename}</span>`;
-        editor.updateOptions({ readOnly: true });
-      } else {
-        console.log(
-          "successfully loaded " +
-            filename +
-            " (" +
-            String(data.text).length +
-            ")"
-        );
-        display_note(editor, String(data.text), false);
-        title.innerHTML = `<span style="font-size:small">${filename}</style>`;
-        window.sessionStorage.setItem("filename", filename);
-        displayLinksToSimilarFiles();
-      }
-    });
-    console.log("completed event listener");
+    let title = document.getElementById("pageTitle");
+    title.innerHTML = `<span style="font-size:small">${window.sessionStorage.getItem("filename")}</style>`;
+    console.log("the window sessionStorage filename i!: " + window.sessionStorage.getItem("filename"));
+    window.sessionStorage.setItem("filename", filename);
+    displayLinksToSimilarFiles();
   });
 </script>
 {% endblock %}

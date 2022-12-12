@@ -118,13 +118,26 @@ def about() -> dict[str, bool]:
 @app.route("/editor")
 @view("editor.html")
 def editor() -> dict[str, bool]:
-    return dict(config_found=CONFIG_FILE_EXISTS)
+    filename = request.params.get("filename")  # type: ignore
+    logger.debug("editor: received request for filename: %s", filename)
+    note_path = Path(project_settings.notes_path).joinpath(filename)
+    try:
+        with open(note_path, "r", encoding="utf-8") as file:
+            text = file.read()
+    except FileNotFoundError:
+        logger.warning("unable to find file named: %s", filename)
+        text = "ERROR:NOT FOUND"
+    return {
+        "config_found": CONFIG_FILE_EXISTS,
+        "filename": filename,
+        "text": text,
+    }
 
 
 @app.route("/display")
 @view("display.html")
 def display() -> dict[str, bool | str]:
-    filename = request.params.get("filename") # type: ignore
+    filename = request.params.get("filename")  # type: ignore
     logger.debug("get: received request for filename: %s", filename)
     note_path = Path(project_settings.notes_path).joinpath(filename)
     try:
@@ -255,7 +268,7 @@ def find_files():
     # file_list = [file.name for file in file_paths]
     data = {i: item for i, item in enumerate(file.name for file in file_paths)}
     logger.debug("found %d files with search string: %s", len(data), key)
-    response.content = JSON_TYPE # type: ignore
+    response.content = JSON_TYPE  # type: ignore
     return data
 
 
@@ -292,7 +305,7 @@ def get():
     except FileNotFoundError:
         logger.warning("unable to find file named: %s", filename)
         text = "ERROR:NOT FOUND"
-    response.content_type = JSON_TYPE 
+    response.content_type = JSON_TYPE
     data = {"text": text}
     return dumps(data)
 
