@@ -10,9 +10,8 @@ False %}
 <h2 id="pageTitle">{{filename}}</h2>
 <div
   id="container"
-  style="width: 800px; height: 600px; border: 1px solid grey"
-  on
-></div>
+  style="width: 800px; height: 600px; border: 1px solid grey">
+</div>
 
 <div id="other-links">No Links</div>
 {% endblock %} {% block scripts %} {{ super() }}
@@ -21,7 +20,7 @@ False %}
 <script src="/static/js/editor.main.js"></script>
 <script src="/static/js/monaco-markdown.js"></script>
 <script src="/static/js/noted/display.js"></script>
-<script type="application/javascript">
+<script type="application/javascript" charset="utf-8">
   // need to make editor a global for use by callbacks
   const editor = create_editor("container");
   let noteBody = "" + `{{text}}`
@@ -83,13 +82,15 @@ False %}
   });
 
   const doLink = function (filename) {
-    alert("doLink");
-    window.open(`${SERVER_URL}/display?filename=${filename}`, "_blank");
+    // alert("doLink");
+    window.open(`${SERVER_URL}/display?filename=${encodeURIComponent(filename)}`, "_blank");
   };
+
   // create a link based on the filename
   const createLink = function (filename) {
     // return `<a href="#" onclick="doLink(${filename})">${filename}</a>`;
-    return `<a href=${SERVER_URL}/display?filename=${filename}>${filename}</a>`;
+      let encodedFilename = encodeURIComponent(`${filename}`);
+    return `<a href=${SERVER_URL}/display?filename=${encodedFilename}>${filename}</a>`;
   };
 
   const displayLinksToSimilarFiles = () => {
@@ -100,19 +101,19 @@ False %}
   };
   document.addEventListener("DOMContentLoaded", function () {
     window.sessionStorage.setItem("editor_text", "");
-    let filename = GetURLParameter("filename");
+    let filename = decodeURIComponent(GetURLParameter("filename"));
     $.post(
       `${SERVER_URL}/api/fullPath/`,
       { filename: filename },
       function (data) {
-        filename = String(data.path);
+        filename = decodeURIComponent(String(data.path));
         console.log("get full path: " + filename);
         window.sessionStorage.setItem("filename", filename);
       }
     );
     let title = document.getElementById("pageTitle");
-    title.innerHTML = `<span style="font-size:small">${window.sessionStorage.getItem("filename")}</style>`;
-    console.log("the window sessionStorage filename i!: " + window.sessionStorage.getItem("filename"));
+    title.innerHTML = `<span style="font-size:small">${filename}</style>`;
+    console.log("the window sessionStorage filename i!: " + filename);
     window.sessionStorage.setItem("filename", filename);
     displayLinksToSimilarFiles();
   });

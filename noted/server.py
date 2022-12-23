@@ -41,6 +41,7 @@ view = partial(jinja2_view, template_lookup=[TEMPLATES_PATH])
 
 app = Bottle()
 
+
 ###############################################################
 # STATIC ROUTES
 ###############################################################
@@ -118,7 +119,8 @@ def about() -> dict[str, bool]:
 @app.route("/editor")
 @view("editor.html")
 def editor() -> dict[str, bool]:
-    filename = request.params.get("filename")  # type: ignore
+    decoded = request.params.decode(encoding='utf-8')
+    filename = decoded.get("filename")  # type: ignore
     logger.debug("editor: received request for filename: %s", filename)
     note_path = Path(project_settings.notes_path).joinpath(filename)
     try:
@@ -137,7 +139,8 @@ def editor() -> dict[str, bool]:
 @app.route("/display")
 @view("display.html")
 def display() -> dict[str, bool | str]:
-    filename = request.params.get("filename")  # type: ignore
+    decoded = request.params.decode('utf-8')
+    filename = decoded.get("filename")  # type: ignore
     logger.debug("get: received request for filename: %s", filename)
     note_path = Path(project_settings.notes_path).joinpath(filename)
     try:
@@ -227,10 +230,12 @@ def create_list_from_word_string(word_string: str) -> list[str]:
 def create():
     """Creates a new note with the provided parameters"""
     logger.debug("received request to create a note")
-    filename: str = request.params["filename"]  # type:ignore
-    keywords = request.params["keywords"]  # type:ignore
-    present = request.params["present"]  # type:ignore
-    speakers = request.params["speakers"]  # type:ignore
+    decoded = request.params.decode(encoding='utf-8')
+    filename = decoded['filename']
+    logger.info("Received filename: %s", filename)
+    keywords = decoded["keywords"]  # type:ignore
+    present = decoded["present"]  # type:ignore
+    speakers = decoded["speakers"]  # type:ignore
     if not filename:
         return {"result": "error: no filename provided"}
     logger.debug("creating note at file: %s", filename)
@@ -275,7 +280,7 @@ def find_files():
 @app.route("/api/findFilesInDatabase/", method="post")
 def find_files_in_database():
     """Returns the names of files from the database corresponding to the provided search string"""
-    logger.info("received request to find files in the database based on a search")
+    logger.debug("received request to find files in the database based on a search")
     key: str = str(request.params["search_string"]).lower()  # type:ignore
     logger.debug("received request to search for files starting with '%s'", key)
     eng = connect_to_database()
@@ -295,7 +300,7 @@ def find_files_in_database():
 @app.route("/api/get/", method="post")
 def get():
     """Return the note matching the request to the frontend"""
-    logger.info("received request to retrieve a file")
+    logger.debug("received request to retrieve a file")
     filename = request.params["filename"]  # type:ignore
     logger.debug("get: received request for filename: %s", filename)
     note_path = Path(project_settings.notes_path).joinpath(filename)
@@ -315,7 +320,8 @@ def full_path():
     """Return the fully qualified path to the caller
     Assumes that a name with separators is fully qualified.
     """
-    name: str = request.params["filename"]  # type:ignore
+    decoded = request.params.decode('utf-8')
+    name: str = decoded["filename"]  # type:ignore
     if "/" in name or "\\" in name:
         return {"path": name}
     else:
@@ -326,8 +332,9 @@ def full_path():
 def store():
     """Called when data is to be stored on disk, after a change."""
     logger.debug("received request to store a file on disk")
-    text: str = request.params["text"]  # type:ignore
-    filename: str = request.params["filename"]  # type:ignore
+    decoded = request.params.decode('utf-8')
+    text: str = decoded["text"]  # type:ignore
+    filename: str = decoded["filename"]  # type:ignore
     if not filename:
         logger.debug("no file to write")
         return {"result": "no file to write"}
@@ -362,7 +369,7 @@ def list_notes_by_stem():
 @app.route("/api/list")
 def list_notes():
     """Returns a list of notes on the disk"""
-    logger.info("received request to list files on disk")
+    logger.debug("received request to list files on disk")
     # note_list = ['lesley-20220830.md', 'bob-20210723.md', 'harry-20221212.md']
     # data = {'notes':note_list}
     logger.debug("in api list")

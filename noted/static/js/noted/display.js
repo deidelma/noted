@@ -57,7 +57,7 @@ const find_notes_by_stem = function (stem, elementName) {
     lines.push(`<ul class='list-group' style="list-style:none; list-style-type:none;">`);
     for (const item of notesList) {
       let filename = item.trim();
-      let link = `<a href=${SERVER_URL}/display?filename=${filename}>${filename}</a>`;
+      let link = `<a href=${SERVER_URL}/display?filename=${encodeURIComponent(filename)}>${filename}</a>`;
       lines.push(`<li class="list-group-item">` + link + `<li>`);
     }
     lines.push("</ul></div>");

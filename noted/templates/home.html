@@ -23,7 +23,7 @@ content %} {% if config_found == False %}
   <div id="newNoteForm" class="container" style="visibility: hidden"></div>
   <div id="noteListDiv" class="container"></div>
 </div>
-<script type="application/javascript">
+<script type="application/javascript" charset="UTF-8">
   const newNoteText = `
   <br/>
   <form action="">
@@ -90,7 +90,7 @@ content %} {% if config_found == False %}
     e.style.visibility = "visible";
     e.style.color = "black";
     e.innerHTML = newNoteText;
-    let now = Date.now();
+    // let now = Date.now();
     let f = document.getElementById("filenameInput");
     f.value = "-" + moment().format("YYYYMMDD") + ".md";
   };
@@ -110,12 +110,12 @@ content %} {% if config_found == False %}
     let search_string = e.value;
     console.log(search_string);
 
-    data = { search_string: search_string };
+    let data = { search_string: search_string };
     $.post(`${SERVER_URL}/api/findfiles/`, data, function (data) {
       let e = document.getElementById("noteListDiv");
       console.log(`Received: ${data}`);
       console.log(typeof data);
-      keys = Object.keys(data);
+      let keys = Object.keys(data);
       console.log(`${typeof keys} ${keys.length}`);
       let lines = [`<div><br/>Found ${keys.length} notes<br/>`];
       lines.push("<ul class='list-group'>");
@@ -139,12 +139,12 @@ content %} {% if config_found == False %}
     let search_string = e.value;
     console.log(search_string);
 
-    data = { search_string: search_string };
+    let data = { search_string: search_string };
     $.post(`${SERVER_URL}/api/findFilesInDatabase/`, data, function (data) {
       let e = document.getElementById("noteListDiv");
       console.log(`Received: ${data}`);
       console.log(typeof data);
-      keys = Object.keys(data);
+      let keys = Object.keys(data);
       console.log(`${typeof keys} ${keys.length}`);
       let lines = [`<div><br/>Found ${keys.length} notes<br/>`];
       lines.push("<ul class='list-group'>");
@@ -174,12 +174,12 @@ content %} {% if config_found == False %}
     let f = document.getElementById("filenameInput");
     let filename = f.value;
     if (filename === "") {
-      e = document.getElementById("filenameLabel");
+      let e = document.getElementById("filenameLabel");
       e.innerHTML = "Filename [REQUIRED]";
       e.style = "color:red";
       return;
     }
-    data = { filename: filename };
+    let data = { filename: filename };
     $.post(`${SERVER_URL}/api/get/`, data, function (data) {
       console.log(`Received: ${data.text}`);
     });
@@ -189,7 +189,7 @@ content %} {% if config_found == False %}
 
   // called when the creation of a new note is confirmed
   const doCreateNote = function () {
-    data = {
+    let data = {
       filename: document.getElementById("filenameInput").value,
       keywords: document.getElementById("keywordsInput").value,
       present: document.getElementById("presentInput").value,
@@ -197,19 +197,19 @@ content %} {% if config_found == False %}
     };
     // ensure that filename is not empty
     if (data.filename === "") {
-      e = document.getElementById("filenameLabel");
+      let e = document.getElementById("filenameLabel");
       e.innerHTML = "Filename [REQUIRED]";
       e.style = "color:red";
       return;
     }
     if (String(data.filename).startsWith("-")) {
-      e = document.getElementById("filenameLabel");
+      let e = document.getElementById("filenameLabel");
       e.innerHTML = "Filename cannot begin with a dash (-)";
       e.style = "color:red";
       return;
     }
     console.log("sending data to " + SERVER_URL + "/api/create");
-    let fullyQualifiedFilename = "";
+    let writtenFilename = "";
     $.post(`${SERVER_URL}/api/create/`, data, function (data) {
       console.log("Received create" + String(data.result));
       if (String(data.result).startsWith("error")) {
@@ -220,6 +220,7 @@ content %} {% if config_found == False %}
         writtenFilename = String(data.filename);
       }
       if (writtenFilename.length > 0) {
+        writtenFilename = encodeURIComponent(writtenFilename);
         window.location.href = `${SERVER_URL}/editor?filename=${writtenFilename}`;
       }
     });
@@ -227,7 +228,7 @@ content %} {% if config_found == False %}
 
   // called when the creation of a new note is cancelled
   const doCancelNote = function () {
-    e = document.getElementById("newNoteForm");
+    let e = document.getElementById("newNoteForm");
     e.style.visibility = "hidden";
     e.innerHTML = "";
   };
