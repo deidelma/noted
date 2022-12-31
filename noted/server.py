@@ -353,15 +353,15 @@ def store():
 @app.route("/api/stem", method=["get", "post"])  # type: ignore
 def list_notes_by_stem():
     """Returns a list of notes on the disk based on the stem"""
-    logger.debug("in list_notes_by_stem")
-    stem = request.params["search_string"]  # type: ignore
-    logger.debug("received request to list files based on stem: %s", stem)
+    stem = request.params["search_string"].lower()  # type: ignore
+    logger.debug("searching path: %s for search string: %s", project_settings.notes_path, f"{stem}*.md")
     notes = sorted(
         Path(project_settings.notes_path).glob(f"{stem}*.md"),
         key=os.path.getmtime,
         reverse=True,
     )
-    data = {"notes": [note.name for note in notes]}
+    data = {"notes": ",".join([note.name for note in notes])}
+    logger.debug(f"{data}")
     response.content_type = JSON_TYPE
     return dumps(data)
 
