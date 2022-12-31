@@ -1,14 +1,16 @@
 bottle==0.12.23
 gitdb==4.0.10
-GitPython==3.1.29
+GitPython==3.1.30
 greenlet==2.0.1
 Jinja2==3.1.2
 Markdown==3.4.1
 MarkupSafe==2.1.1
 -e git+https://github.com/deidelma/noted.git@bbd0d75cda172e9d6ef320349a48d88b2adc0c35#egg=noted
-pydantic==1.10.2
+pydantic==1.10.4
 python-dotenv==0.21.0
 smmap==5.0.0
-SQLAlchemy==1.4.44
+SQLAlchemy==1.4.45
 typing_extensions==4.4.0
 watchdog==2.2.0
+
+pytest~=7.2.0
