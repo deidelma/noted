@@ -1,121 +1,121 @@
 {% extends "base.html" %} {% block title %}Note Editor{% endblock %} {% block
 head %} {{ super() }} {% endblock %} {% block content %} {% if config_found ==
 False %}
-<script>
-  window.addEventListener("load", function () {
-    window.location.replace(`${SERVER_URL}/noconfig`);
-  });
-</script>
+    <script>
+        window.addEventListener("load", function () {
+            window.location.replace(`${SERVER_URL}/noconfig`);
+        });
+    </script>
 {% endif %}
-<h2 id="pageTitle">{{filename}}</h2>
-<div
-  id="container"
-  style="width: 800px; height: 600px; border: 1px solid grey">
-</div>
+    <h2 id="pageTitle">{{ filename }}</h2>
+    <div
+            id="container"
+            style="width: 800px; height: 600px; border: 1px solid grey">
+    </div>
 
-<div id="other-links">No Links</div>
+    <div id="other-links">No Links</div>
 {% endblock %} {% block scripts %} {{ super() }}
-<script src="/static/js/loader.js"></script>
-<script src="/static/js/editor.main.nls.js"></script>
-<script src="/static/js/editor.main.js"></script>
-<script src="/static/js/monaco-markdown.js"></script>
-<script src="/static/js/noted/display.js"></script>
-<script type="application/javascript" charset="utf-8">
-  // need to make editor a global for use by callbacks
-  const editor = create_editor("container");
-  let noteBody = "" + `{{text}}`
-  display_note(editor, noteBody, false);
+    <script src="/static/js/loader.js"></script>
+    <script src="/static/js/editor.main.nls.js"></script>
+    <script src="/static/js/editor.main.js"></script>
+    <script src="/static/js/monaco-markdown.js"></script>
+    <script src="/static/js/noted/display.js"></script>
+    <script type="application/javascript" charset="utf-8">
+        // need to make editor a global for use by callbacks
+        const editor = create_editor("container");
+        let noteBody = "" + `{{text}}`
+        display_note(editor, noteBody, false);
 
-  // store the file on the disk
-  const doStore = function () {
-    // no need to store if this a readonly file
-    if (window.READ_ONLY) {
-      return;
-    }
-    let text = editor.getValue();
-    let data = {
-      text: text,
-      filename: window.sessionStorage.getItem("filename"),
-    };
-    console.log(data);
-    $.post(`${SERVER_URL}/api/store/`, data, function (data) {
-      console.log("Received store" + data);
-      let result = String(data.result);
-      if (!result.startsWith("success")) {
-        alert(result);
-      } else {
-        console.log("successfully stored " + text.length);
-      }
-    });
-  };
+        // store the file on the disk
+        const doStore = function () {
+            // no need to store if this a readonly file
+            if (window.READ_ONLY) {
+                return;
+            }
+            let text = editor.getValue();
+            let data = {
+                text: text,
+                filename: window.sessionStorage.getItem("filename"),
+            };
+            console.log(data);
+            $.post(`${SERVER_URL}/api/store/`, data, function (data) {
+                console.log("Received store" + data);
+                let result = String(data.result);
+                if (!result.startsWith("success")) {
+                    alert(result);
+                } else {
+                    console.log("successfully stored " + text.length);
+                }
+            });
+        };
 
-  // manage the state of the editor's text
-  const update_text = (evt) => {
-    let changed = String(evt.changes[0].text);
-    let current_text = editor.getValue();
-    let deleted =
-      current_text.length < window.sessionStorage.getItem("editor_text").length;
-    window.sessionStorage.setItem("editor_text", current_text);
-    let title = document.getElementById("pageTitle");
-    if (changed.startsWith("\n") || deleted) {
-      doStore();
-      let newTitle = window.sessionStorage.getItem("filename");
-      console.log("new title:" + newTitle);
-      title.innerHTML = `<span style="font-size:small">${newTitle}</style>`;
-    } else {
-      let newTitle = window.sessionStorage.getItem("filename") + " *";
-      console.log("new title:" + newTitle);
-      title.innerHTML = `<span style="font-size:small">${newTitle}</style>`;
-    }
-  };
+        // manage the state of the editor's text
+        const update_text = (evt) => {
+            let changed = String(evt.changes[0].text);
+            let current_text = editor.getValue();
+            let deleted =
+                current_text.length < window.sessionStorage.getItem("editor_text").length;
+            window.sessionStorage.setItem("editor_text", current_text);
+            let title = document.getElementById("pageTitle");
+            if (changed.startsWith("\n") || deleted) {
+                doStore();
+                let newTitle = window.sessionStorage.getItem("filename");
+                console.log("new title:" + newTitle);
+                title.innerHTML = `<span style="font-size:small">${newTitle}</style>`;
+            } else {
+                let newTitle = window.sessionStorage.getItem("filename") + " *";
+                console.log("new title:" + newTitle);
+                title.innerHTML = `<span style="font-size:small">${newTitle}</style>`;
+            }
+        };
 
-  // save when a new line is entered
-  editor.getModel().onDidChangeContent(function (evt) {
-    update_text(evt);
-    // console.log(JSON.stringify(evt.changes[0].text, null, "\t"));
-  });
+        // save when a new line is entered
+        editor.getModel().onDidChangeContent(function (evt) {
+            update_text(evt);
+            // console.log(JSON.stringify(evt.changes[0].text, null, "\t"));
+        });
 
-  // make sure to save before leaving the page
-  $(window).bind("beforeunload", function () {
-    doStore();
-    window.sessionStorage.removeItem("editor_text");
-  });
+        // make sure to save before leaving the page
+        $(window).bind("beforeunload", function () {
+            doStore();
+            window.sessionStorage.removeItem("editor_text");
+        });
 
-  const doLink = function (filename) {
-    // alert("doLink");
-    window.open(`${SERVER_URL}/display?filename=${encodeURIComponent(filename)}`, "_blank");
-  };
+        const doLink = function (filename) {
+            // alert("doLink");
+            window.open(`${SERVER_URL}/display?filename=${encodeURIComponent(filename)}`, "_blank");
+        };
 
-  // create a link based on the filename
-  const createLink = function (filename) {
-    // return `<a href="#" onclick="doLink(${filename})">${filename}</a>`;
-      let encodedFilename = encodeURIComponent(`${filename}`);
-    return `<a href=${SERVER_URL}/display?filename=${encodedFilename}>${filename}</a>`;
-  };
+        // create a link based on the filename
+        const createLink = function (filename) {
+            // return `<a href="#" onclick="doLink(${filename})">${filename}</a>`;
+            let encodedFilename = encodeURIComponent(`${filename}`);
+            return `<a href=${SERVER_URL}/display?filename=${encodedFilename}>${filename}</a>`;
+        };
 
-  const displayLinksToSimilarFiles = () => {
-    let stem = get_stem(window.sessionStorage["filename"]);
-    if (stem) {
-      find_notes_by_stem(stem, "other-links");
-    }
-  };
-  document.addEventListener("DOMContentLoaded", function () {
-    window.sessionStorage.setItem("editor_text", "");
-    let filename = decodeURIComponent(GetURLParameter("filename"));
-    $.post(
-      `${SERVER_URL}/api/fullPath/`,
-      { filename: filename },
-      function (data) {
-        filename = decodeURIComponent(String(data.path));
-        console.log("get full path: " + filename);
-        window.sessionStorage.setItem("filename", filename);
-      }
-    );
-    let title = document.getElementById("pageTitle");
-    title.innerHTML = `<span style="font-size:small">${filename}</style>`;
-    console.log("the window sessionStorage filename i!: " + filename);
-    window.sessionStorage.setItem("filename", filename);
-    displayLinksToSimilarFiles();
-  });
-</script>
+        const displayLinksToSimilarFiles = () => {
+            let stem = get_stem(window.sessionStorage["filename"]);
+            if (stem) {
+                find_notes_by_stem(stem, "other-links");
+            }
+        };
+        document.addEventListener("DOMContentLoaded", function () {
+            window.sessionStorage.setItem("editor_text", "");
+            let filename = decodeURIComponent(GetURLParameter("filename"));
+            $.post(
+                `${SERVER_URL}/api/fullPath/`,
+                {filename: filename},
+                function (data) {
+                    filename = decodeURIComponent(String(data.path));
+                    console.log("get full path: " + filename);
+                    window.sessionStorage.setItem("filename", filename);
+                }
+            );
+            let title = document.getElementById("pageTitle");
+            title.innerHTML = `<span style="font-size:small">${filename}</style>`;
+            console.log("the window sessionStorage filename i!: " + filename);
+            window.sessionStorage.setItem("filename", filename);
+            displayLinksToSimilarFiles();
+        });
+    </script>
 {% endblock %}
