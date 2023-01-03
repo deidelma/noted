@@ -41,4 +41,7 @@ noted.egg-info/
 
 .idea/
 /noted/test_noted.db
+/noted/noted.egg-info
 /tests/mock.sqbpro
+/tests/.pytest_cache
+
