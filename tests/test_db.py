@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.engine import Engine
 
-from noted.db import connect_to_database, add_note, notes, keywords, search_by_keyword
+from noted.db import connect_to_database, add_note, notes, keywords, search_by_keyword, search_by_file
 from noted.notes import Note
 from noted.utils import create_logger
 
@@ -94,13 +94,27 @@ def test_search_by_keyword(database_engine):
     add_note(database_engine, FAKE_NOTES[0])
     add_note(database_engine, FAKE_NOTES[1])
     add_note(database_engine, FAKE_NOTES[2])
-    found: list[Note] = search_by_keyword(database_engine, "two", exact=True)
-    assert 2, len(found)
+    found: list[Note] = search_by_keyword(database_engine, "two", exact_match=True)
+    assert len(found) == 2
     assert found[0].filename.endswith("note_one.md")
     assert found[1].filename.endswith("note_two.md")
     found: list[Note] = search_by_keyword(database_engine, "tw")
-    assert 2, len(found)
+    assert len(found) == 2
     found: list[Note] = search_by_keyword(database_engine, "th")
-    assert 2, len(found)
-    found: list[Note] = search_by_keyword(database_engine, "t")
-    assert 5, len(found)
+    assert len(found) == 3
+    found: list[Note] = search_by_keyword(database_engine, "o")
+    assert len(found) == 1
+
+
+def test_search_by_file(database_engine):
+    add_note(database_engine, FAKE_NOTES[0])
+    add_note(database_engine, FAKE_NOTES[1])
+    add_note(database_engine, FAKE_NOTES[2])
+    found: list[Note] = search_by_file(database_engine, "two")
+    assert len(found) == 1
+    assert found[0].filename.endswith("note_two.md")
+    found: list[Note] = search_by_file(database_engine, "tw")
+    assert len(found) == 1
+    assert found[0].filename.endswith("note_two.md")
+    found: list[Note] = search_by_file(database_engine, "four")
+    assert len(found) == 0

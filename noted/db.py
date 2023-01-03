@@ -158,13 +158,13 @@ class OverwriteAttemptError(Exception):
     """Raised when there is an attempt to overwrite an existing database entry"""
 
 
-def add_note(eng: Engine, note: Note) -> int:
+def add_note(eng: Engine, a_note: Note) -> int:
     """
     Adds the note to the database.  Automatically inserts keywords, present, speakers.
 
     Args:
         eng: the connection to the database
-        note: the note to be added
+        a_note: the note to be added
 
     Exceptions:
         OverwriteAttemptError when trying to overwrite an existing file
@@ -178,21 +178,21 @@ def add_note(eng: Engine, note: Note) -> int:
         # )
         # row = conn.execute(stmt).fetchone()
         # if row:
-        if already_stored(eng, note.filename, note.timestamp):
+        if already_stored(eng, a_note.filename, a_note.timestamp):
             raise OverwriteAttemptError(
-                f"attempt to overwrite note: {note.filename}:{note.timestamp}"
+                f"attempt to overwrite a_note: {a_note.filename}:{a_note.timestamp}"
             )
-        logger.debug("adding %s to database", note.filename)
+        logger.debug("adding %s to database", a_note.filename)
         stmt = notes.insert().values(  # type: ignore
-            filename=note.filename, timestamp=note.timestamp, body=note.to_markdown()
+            filename=a_note.filename, timestamp=a_note.timestamp, body=a_note.to_markdown()
         )
         result = conn.execute(stmt)
         note_id = result.inserted_primary_key[0]
-        for kw in note.keywords:
+        for kw in a_note.keywords:
             insert_metadata(conn, "keywords", kw, note_id)
-        for pr in note.present:
+        for pr in a_note.present:
             insert_metadata(conn, "present", pr, note_id)
-        for speaker in note.speakers:
+        for speaker in a_note.speakers:
             insert_metadata(conn, "speakers", speaker, note_id)
     return note_id
 
@@ -202,10 +202,10 @@ def make_search_statement(meta_table: str, exact: bool) -> str:
 
     meta_table can be one of keywords, present, or speakers
 
-    if exact is false, uses LIKE as the test operator.
+    if exact_match is false, uses LIKE as the test operator.
     """
     notes_table = "notes"
-    meta_table = "keywords"
+    # meta_table = "keywords"
     if exact:
         test_operator = "="
     else:
@@ -217,7 +217,40 @@ def make_search_statement(meta_table: str, exact: bool) -> str:
     return stmt
 
 
-def search_by_keyword(eng: Engine, keyword: str, exact: bool = False) -> list[Note]:
+def search_by_file(eng: Engine, filename_stem: str) -> list[Note]:
+    """
+    Find the database entries whose filename is starts with the provided filename_stem.
+    If the filename of a note is stored with a path prefix (e.g., something/bob.md), then
+    only the filename is used for searches (i.e., bob.md). The suffix (i.e., ".md") is also ignored in the search.
+
+    Matching is done using the LIKE operator so filename_stem="bob" will match any of "bob.md", "bobo.md" "bobby.md".
+
+    More than one Note with the same filename may be returned if they have different timestamps.
+
+    Returns a list of Note.
+    """
+    filename = Path(filename_stem).name
+    if "." in filename:
+        pos = filename.index(".")
+        if pos > 0:
+            filename = filename[:-pos]
+
+    conn = eng.connect()
+    stmt = select(notes).where(notes.c.filename.like(f"%{filename}%"))
+    rows = conn.execute(stmt).fetchall()
+    result = []
+    for row in rows:
+        # use body to populate the note
+        n: Note = Note.create_note_from_markdown(row[3])
+        # correct the filename and timestamp
+        n.filename = row[1]
+        n.timestamp = row[2]
+        logger.debug(f"{n}")
+        result.append(n)
+    return result
+
+
+def search_by_keyword(eng: Engine, keyword: str, exact_match: bool = False) -> list[Note]:
     """
     find the database entries corresponding to the keyword and
     return them as a list of Note.
@@ -226,27 +259,24 @@ def search_by_keyword(eng: Engine, keyword: str, exact: bool = False) -> list[No
     the SQL selector LIKE keyword% to find the matches.  A search
     for the keyword "bob" will match "bobby" and "bobo" as well.
 
-    If exact is true, then "bob" only matches "bob".
+    If exact_match is true, then "bob" only matches "bob".
     """
-    if not exact:
+    if not exact_match:
         keyword.replace("*", "")  # clean any wildcards
         keyword = f"{keyword}%"
     conn = eng.connect()
-    stmt = make_search_statement("keywords", exact)
+    stmt = make_search_statement("keywords", exact_match)
     logger.debug(stmt)
     rows = conn.execute(text(stmt), {"data": keyword}).fetchall()
     result: list[Note] = []
     for row in rows:
         logger.debug(f"{row}")
-        n = Note(page_header=row[1],
-                 filename=row[1],
-                 keywords=row[4],
-                 present=row[5],
-                 speakers=row[6],
-                 timestamp=row[2],
-                 )
-        n.body = row[3]
-        logger.info(f"{n}")
+        # use body to populate the note
+        n: Note = Note.create_note_from_markdown(row[3])
+        # correct the filename and timestamp
+        n.filename = row[1]
+        n.timestamp = row[2]
+        logger.debug(f"{n}")
         result.append(n)
     return result
 
