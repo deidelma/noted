@@ -15,6 +15,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 from pydantic import BaseModel
+
 from noted.settings import load_configuration
 
 project_settings = load_configuration()
@@ -92,15 +93,14 @@ class Section:
 class Note:
     """Data representation of the note currently being edited."""
 
-    def __init__(
-        self,
-        page_header: str,
-        filename: str = "",
-        keywords: list[str] | None = None,
-        present: list[str] | None = None,
-        speakers: list[str] | None = None,
-        timestamp: datetime = datetime.now(),
-    ) -> None:
+    def __init__(self,
+                 page_header: str,
+                 filename: str = "",
+                 keywords: list[str] | None = None,
+                 present: list[str] | None = None,
+                 speakers: list[str] | None = None,
+                 timestamp: datetime = datetime.now(),
+                 ) -> None:
         self.page_header = page_header
         if filename:
             self.filename = filename
@@ -129,6 +129,10 @@ class Note:
 
         self.sections: dict[str, Section] = {}
         self._body = ""
+
+    def __repr__(self) -> str:
+        len_keywords = len(self.keywords) if self.keywords is not None else 0
+        return f"Note:{self.filename} {self.timestamp} {len(self.body)} chars {len_keywords} keywords"
 
     @property
     def body(self) -> str:
@@ -214,7 +218,7 @@ class Note:
         self.body = other.body
 
     def write_file(
-        self, filename: str | Path | None = None, overwrite: bool = False
+            self, filename: str | Path | None = None, overwrite: bool = False
     ) -> None:
         """
         Write file to disc using provided fully qualified< filename.
