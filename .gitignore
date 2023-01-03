@@ -41,3 +41,4 @@ noted.egg-info/
 
 .idea/
 /noted/test_noted.db
+/tests/mock.sqbpro
