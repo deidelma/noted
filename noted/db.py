@@ -172,19 +172,16 @@ def add_note(eng: Engine, a_note: Note) -> int:
     Returns: the id of the inserted note
     """
     with eng.begin() as conn:
-        # first check if there is an existing entry with the same filename and timestamp
-        # stmt = notes.select().where(
-        #     notes.c.filename == note.filename, notes.c.timestamp == note.timestamp  # type: ignore
-        # )
-        # row = conn.execute(stmt).fetchone()
-        # if row:
         if already_stored(eng, a_note.filename, a_note.timestamp):
             raise OverwriteAttemptError(
                 f"attempt to overwrite a_note: {a_note.filename}:{a_note.timestamp}"
             )
         logger.debug("adding %s to database", a_note.filename)
         stmt = notes.insert().values(  # type: ignore
-            filename=a_note.filename, timestamp=a_note.timestamp, body=a_note.to_markdown()
+            filename=a_note.filename, timestamp=a_note.timestamp, body=a_note.to_markdown(),
+            keywords=",".join(a_note.keywords),
+            present =",".join(a_note.present),
+            speakers=",".join(a_note.speakers)
         )
         result = conn.execute(stmt)
         note_id = result.inserted_primary_key[0]
