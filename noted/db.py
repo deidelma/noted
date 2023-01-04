@@ -281,7 +281,7 @@ def search_by_keyword(eng: Engine, keyword: str, exact_match: bool = False) -> l
     if not exact_match:
         keyword.replace("*", "")  # clean any wildcards
         keyword = f"{keyword}%"
-    with engine.begin() as conn:
+    with eng.begin() as conn:
         stmt = make_search_statement("keywords", exact_match)
         logger.debug(stmt)
         rows = conn.execute(text(stmt), {"data": keyword}).fetchall()
@@ -292,7 +292,7 @@ def count_notes(eng: Engine) -> int:
     """
     Returns the number of notes in the database.
     """
-    with engine.begin() as conn:
+    with eng.begin() as conn:
         stmt = select(func.count()).select_from(notes)
         logger.debug(stmt)
         return conn.execute(stmt).scalar()
