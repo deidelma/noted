@@ -7,7 +7,8 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.engine import Engine
 
-from noted.db import connect_to_database, add_note, notes, keywords, search_by_keyword, search_by_file
+from noted.db import connect_to_database, add_note, notes, keywords, search_by_keyword, search_by_file, count_notes, \
+    find_all_notes
 from noted.notes import Note
 from noted.utils import create_logger
 
@@ -83,8 +84,8 @@ def test_add_notes(database_engine):
 
 
 def test_keywords_added(database_engine):
-    id = add_note(database_engine, FAKE_NOTES[0])
-    stmt = select(keywords).where(keywords.c.note_id == id)
+    the_id = add_note(database_engine, FAKE_NOTES[0])
+    stmt = select(keywords).where(keywords.c.note_id == the_id)
     conn = database_engine.connect()
     rows = conn.execute(stmt).fetchall()
     assert len(rows) == 3
@@ -118,3 +119,27 @@ def test_search_by_file(database_engine):
     assert found[0].filename.endswith("note_two.md")
     found: list[Note] = search_by_file(database_engine, "four")
     assert len(found) == 0
+
+
+def test_find_all_notes(database_engine):
+    add_note(database_engine, FAKE_NOTES[0])
+    add_note(database_engine, FAKE_NOTES[1])
+    add_note(database_engine, FAKE_NOTES[2])
+    found: list[Note] = find_all_notes(database_engine)
+    assert len(found) == 3
+
+
+def test_find_all_notes_empty_database(database_engine):
+    found: list[Note] = find_all_notes(database_engine)
+    assert len(found) == 0
+
+
+def test_count_notes(database_engine):
+    add_note(database_engine, FAKE_NOTES[0])
+    add_note(database_engine, FAKE_NOTES[1])
+    add_note(database_engine, FAKE_NOTES[2])
+    assert count_notes(database_engine) == 3
+
+
+def test_count_empty_database(database_engine):
+    assert count_notes(database_engine) == 0
