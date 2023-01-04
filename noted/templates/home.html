@@ -18,8 +18,8 @@ content %} {% if config_found == False %}
         <button class="btn btn-primary" onclick="doFindNoteInDatabase()">
             Find Note in Database
         </button>
-        <button class="btn btn-primary" onclick="doUpdateDatabase()">
-            Update Database
+        <button class="btn btn-primary" onclick="doFindKeywordInDatabase()">
+            Keyword Search
         </button>
         <div id="newNoteForm" class="container" style="visibility: hidden"></div>
         <div id="noteListDiv" class="container"></div>
@@ -77,6 +77,19 @@ content %} {% if config_found == False %}
    </div>
   `;
 
+        const findKeywordInDatabaseText = `
+  <br/>
+  <form action="">
+        <div class="form-group">
+            <label for="filenameInput" id="keywordLabel">Keyword</label>
+            <input type="text" class="form-control" id="keywordInput">
+            <small id="keywordHelp" class="form-text text-muted">Required</small>
+        </div>
+    <div aria-label="Note buttons">
+        <button type="button" class="btn btn-primary" onclick="doFindKeywordEntries()">Load</button>
+   </div>
+  `;
+
         // resets page to baseline appearance
         const closeNewNoteFormDiv = function () {
             let e = document.getElementById("newNoteForm");
@@ -117,7 +130,7 @@ content %} {% if config_found == False %}
         const doFindDatabaseEntries = function () {
             // call server to find the files that match the criterion
             let e = document.getElementById("filenameInput");
-            console.log("doFindFiles");
+            console.log("doFindDatabaseEntries");
             let search_string = e.value;
             console.log(search_string);
 
@@ -143,11 +156,47 @@ content %} {% if config_found == False %}
             });
         };
 
+        const doFindKeywordEntries = function () {
+            // call server to find the files that match the criterion
+            let e = document.getElementById("keywordInput");
+            console.log("doFindKeywordEntries");
+            let kwd = e.value;
+            console.log(kwd);
+
+            let data = {keyword: kwd};
+            $.post(`${SERVER_URL}/api/findFilesByKey/`, data, function (data) {
+                let e = document.getElementById("noteListDiv");
+                console.log(`Received: ${data}`);
+                console.log(typeof data);
+                let keys = Object.keys(data);
+                console.log(`${typeof keys} ${keys.length}`);
+                let lines = [`<div><br/>Found ${keys.length} notes<br/>`];
+                lines.push("<ul class='list-group'>");
+                for (let i = 0; i < keys.length; i++) {
+                    console.log(String(data[keys[i]]).trim());
+                    let link = createNoteLink(String(data[keys[i]]).trim());
+                    lines.push(`<li class="list-group-item">${link}</li>`);
+                }
+                lines.push("</ul></div>");
+
+                e.innerHTML = lines.join("\n");
+                // localStorage.setItem("last_search", lines.join("\n"));
+                closeNewNoteFormDiv();
+            });
+        };
+
         const doFindNoteInDatabase = function () {
             let e = document.getElementById("newNoteForm");
             e.style.visibility = "visible";
             e.style.color = "black";
             e.innerHTML = findNoteInDatabaseText;
+        };
+
+        const doFindKeywordInDatabase = function () {
+            let e = document.getElementById("newNoteForm");
+            e.style.visibility = "visible";
+            e.style.color = "black";
+            e.innerHTML = findKeywordInDatabaseText;
         };
 
         // called to load a specific note from the database

@@ -5,13 +5,12 @@ Module providing scans and searches for the noted project.
 """
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import sqlalchemy.engine
 from sqlalchemy import select
 
-from noted import database
-from noted.database import OverwriteAttemptError, notes
+from noted import db
+from noted.db import OverwriteAttemptError, notes
 from noted.notes import Note
 from noted.settings import load_configuration
 from noted.utils import create_logger
@@ -26,8 +25,8 @@ class SearchException(Exception):
 
 
 def needs_updating(
-    timestamp_table: dict[str, datetime],
-    file_path: Path,
+        timestamp_table: dict[str, datetime],
+        file_path: Path,
 ) -> bool:
     """
     Returns true if the disk version of the file is newer than the one in the database.
@@ -62,7 +61,7 @@ def process_file(engine: sqlalchemy.engine.Engine, file_path: Path) -> None:
     note.filename = file_path.name
     note.timestamp = data.timestamp
     try:
-        database.add_note(engine, note)
+        db.add_note(engine, note)
     except OverwriteAttemptError:
         logger.error("attempt to overwrite existing file: %s", f"{note.filename} {note.timestamp}")
         return
@@ -99,9 +98,9 @@ def excluded(a_file: Path, excluded_files: list[str]) -> bool:
 
 
 def process_files(
-    engine: sqlalchemy.engine.Engine,
-    notes_path: Path,
-    exclude_files: str | list[str] = "",
+        engine: sqlalchemy.engine.Engine,
+        notes_path: Path,
+        exclude_files: str | list[str] = "",
 ) -> tuple[int, int]:
     """
     Process all the files in the directory, adding or updating them in the database.
@@ -158,7 +157,7 @@ def process_files(
 
 
 def do_scan(
-    notes_dir: str = "", db_pathname: str = "", exclude: str | list[str] = ""
+        notes_dir: str = "", db_pathname: str = "", exclude: str | list[str] = ""
 ) -> tuple[int, int]:
     """
     Carry out the scan of the current notes directory, updating the database.
@@ -177,7 +176,7 @@ def do_scan(
     logger.debug(
         "scanning directory: %s; updating database: %s", notes_dir, db_pathname
     )
-    engine = database.connect_to_database(db_pathname)
+    engine = db.connect_to_database(db_pathname)
 
     result, count = process_files(
         engine, notes_path=Path(notes_dir), exclude_files=exclude
@@ -198,13 +197,13 @@ def do_filename_search(filename: str, db_pathname: str = "") -> list[str]:
     logger.debug("searching for '%s'", filename)
     if db_pathname == "":
         db_pathname = project_settings.database_path
-    engine = database.connect_to_database(db_pathname)
-    items = database.find_notes_by_filename(engine, filename)
+    engine = db.connect_to_database(db_pathname)
+    items = db.search_by_file(engine, filename)
     return [note.filename for note in items]
 
 
 def do_filename_search_by_keyword(
-    keyword: str, db_pathname: str = "", verbose: bool = False
+        keyword: str, db_pathname: str = "", verbose: bool = False
 ) -> list[str]:
     """
     Search for the filenames that match the keyword wildcard passed from the command line.
@@ -219,8 +218,8 @@ def do_filename_search_by_keyword(
     logger.debug("searching for keyword: '%s'", keyword)
     if db_pathname == "":
         db_pathname = project_settings.database_path
-    engine = database.connect_to_database(db_pathname)
-    the_notes = database.find_notes_by_keyword(engine, keyword)
+    engine = db.connect_to_database(db_pathname)
+    the_notes = db.search_by_keyword(engine, keyword)
     filenames = [n.filename for n in the_notes]
     logger.debug(
         "Found %d unique filenames corresponding to key: %s", len(filenames), keyword
@@ -244,8 +243,8 @@ def do_note_search_by_keyword(keyword: str, db_pathname: str = "") -> list[Note]
     logger.debug("searching for keyword: '%s'", keyword)
     if db_pathname == "":
         db_pathname = project_settings.database_path
-    engine = database.connect_to_database(db_pathname)
-    the_notes = database.find_notes_by_keyword(engine, keyword)
+    engine = db.connect_to_database(db_pathname)
+    the_notes = db.search_by_keyword(engine, keyword)
     logger.debug("found %d notes matching keyword: %s", len(the_notes), keyword)
     return the_notes
 
@@ -262,23 +261,5 @@ def do_count(db_pathname: str = "") -> int:
     """
     if db_pathname == "":
         db_pathname = project_settings.database_path
-    engine = database.connect_to_database(db_pathname)
-    return database.count_notes(engine)
-
-
-def do_backup(filenames: Optional[list[str]] = None) -> None:
-    """
-    Backups up the files in the current notes directory.
-    If filenames is provided, only backs up those in the list.
-    Filenames should not be fully qualified (i.e., bob.md, not /user/notes/bob.md)
-
-    Args:
-        filenames (optional): List of files in the notes directory to backup.
-    """
-    ts = datetime.now().timestamp()
-    current_bu_dir_name: str = f"{ts}"
-    print(current_bu_dir_name)
-    bu_path = Path(project_settings.backup_path).joinpath()
-    logger.info("backing up to %s", bu_path.as_posix())
-    if filenames:
-        logger.info("restricting backup to %d files", len(filenames))
+    engine = db.connect_to_database(db_pathname)
+    return db.count_notes(engine)

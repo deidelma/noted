@@ -4,23 +4,22 @@ server.py
 HTTP server for the backend of the noted project
 """
 import os
-from pathlib import Path
-from signal import signal
 import signal
 import sys
 import threading
+import time
 from functools import partial
 from json import dumps
-import time
+from pathlib import Path
 
 from bottle import Bottle, static_file, request, jinja2_view, response
 
-from noted.utils import create_logger, debugging
-from noted.settings import load_configuration
-from noted.database import find_notes_by_filename, connect_to_database, find_all_notes
+import noted.settings as settings
+from noted.db import search_by_file, connect_to_database, find_all_notes, search_by_keyword
 from noted.notes import Note
 from noted.searches import do_scan
-import noted.settings as settings
+from noted.settings import load_configuration
+from noted.utils import create_logger, debugging
 
 logger = create_logger(__name__)
 project_settings = load_configuration()
@@ -193,16 +192,18 @@ def update_database_before_exiting():
 
 
 def terminal_process(delay=2):
-    print("server shutting down", file=sys.stderr)
+    logger.info("server shutting down in %d seconds", delay)
     remove_crap()
     update_database_before_exiting()
     time.sleep(delay)
+    logger.info("sending interrupt signal")
     signal.raise_signal(signal.SIGINT)
 
 
 @app.route("/terminate")
 @view("terminate.html")
 def terminate() -> dict[str, bool]:
+    logger.info("starting termination thread")
     t = threading.Thread(target=terminal_process, daemon=True)
     t.start()
     return dict(config_found=CONFIG_FILE_EXISTS)
@@ -259,24 +260,6 @@ def create():
     return {"result": f"success writing ({len(text)} chars)", "filename": filename}
 
 
-@app.route("/api/findfiles", method="post")
-def find_files():
-    """Returns the names of files corresponding to the provided search string"""
-    logger.debug("received request to find files on disk based on a search")
-    key: str = str(request.params["search_string"]).lower()  # type:ignore
-    logger.debug("received request to search for files starting with '%s'", key)
-    if not key.endswith("*"):
-        key = key + "*.md"
-    file_paths = sorted(
-        Path(project_settings.notes_path).glob(key), key=os.path.getmtime, reverse=True
-    )
-    # file_list = [file.name for file in file_paths]
-    data = {i: item for i, item in enumerate(file.name for file in file_paths)}
-    logger.debug("found %d files with search string: %s", len(data), key)
-    response.content = JSON_TYPE  # type: ignore
-    return data
-
-
 @app.route("/api/findFilesInDatabase/", method="post")
 def find_files_in_database():
     """Returns the names of files from the database corresponding to the provided search string"""
@@ -284,13 +267,24 @@ def find_files_in_database():
     key: str = str(request.params["search_string"]).lower()  # type:ignore
     logger.debug("received request to search for files starting with '%s'", key)
     eng = connect_to_database()
-    if key == "":
+    if key == "" or key.lower() in ['all', '*.*']:
         note_list = find_all_notes(eng)
     else:
-        if key.endswith("*"):
-            key = key[0:-1]
-        key = f"%{key}%"
-        note_list = find_notes_by_filename(eng, key, wildcard=True)
+        note_list = search_by_file(eng, key.strip().lower())
+    data = {i: item for i, item in enumerate(note.filename for note in note_list)}
+    logger.debug("found %d notes in database", len(data))
+    response.content = JSON_TYPE  # type:ignore
+    return data
+
+
+@app.route("/api/findFilesByKey/", method="post")
+def find_files_by_key():
+    """Returns the names of files from the database corresponding to the provided key"""
+    logger.debug("received request to find files in the database based on a keyword")
+    key: str = str(request.params["keyword"]).lower()  # type:ignore
+    logger.debug("received request to search for files with keyword %s", key)
+    eng = connect_to_database()
+    note_list = search_by_keyword(eng, key.strip().lower())
     data = {i: item for i, item in enumerate(note.filename for note in note_list)}
     logger.debug("found %d notes in database", len(data))
     response.content = JSON_TYPE  # type:ignore
@@ -383,7 +377,7 @@ def list_notes():
     return dumps(data)
 
 
-@app.route("/api/updateDatabase", method="GET")
+@app.route("/api/updateDatabase")
 def update():
     """Updates the database with files in the currently active notes directory"""
     logger.debug("received request to update the database")
@@ -401,9 +395,11 @@ def serve():
 
 
 def launch_server():
+    """Launch the server in its own thread."""
     thread = threading.Thread(target=serve, daemon=True)
     thread.start()
 
 
 def stop_server() -> None:
+    """Stop the server."""
     app.close()

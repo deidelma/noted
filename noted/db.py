@@ -24,9 +24,9 @@ from sqlalchemy import (
     create_engine,
     select,
     insert,
-    ForeignKeyConstraint, text
+    ForeignKeyConstraint, text, func
 )
-from sqlalchemy.engine import Engine, Connection
+from sqlalchemy.engine import Engine, Connection, Row
 
 from noted.notes import Note
 from noted.settings import load_configuration
@@ -217,6 +217,32 @@ def make_search_statement(meta_table: str, exact: bool) -> str:
     return stmt
 
 
+def create_note_from_row(row: Row) -> Note:
+    """
+    Converts the data in the provided row into a Note.
+    Assumes data is ordered as follows:
+        row[1] -> filename
+        row[2] -> timestamp
+        row[3] -> body
+    """
+    # initialize the note from the body
+    n: Note = Note.create_note_from_markdown(row[3])
+    # correct the filename and timestamp
+    n.filename = row[1]
+    n.timestamp = row[2]
+    return n
+
+
+def find_all_notes(eng: Engine) -> list[Note]:
+    """
+    Return a list of all the notes currently in the database.
+    """
+    with eng.begin() as conn:
+        stmt = select(notes)
+        rows = conn.execute(stmt).fetchall()
+        return [create_note_from_row(row) for row in rows]
+
+
 def search_by_file(eng: Engine, filename_stem: str) -> list[Note]:
     """
     Find the database entries whose filename is starts with the provided filename_stem.
@@ -235,19 +261,10 @@ def search_by_file(eng: Engine, filename_stem: str) -> list[Note]:
         if pos > 0:
             filename = filename[:-pos]
 
-    conn = eng.connect()
-    stmt = select(notes).where(notes.c.filename.like(f"%{filename}%"))
-    rows = conn.execute(stmt).fetchall()
-    result = []
-    for row in rows:
-        # use body to populate the note
-        n: Note = Note.create_note_from_markdown(row[3])
-        # correct the filename and timestamp
-        n.filename = row[1]
-        n.timestamp = row[2]
-        logger.debug(f"{n}")
-        result.append(n)
-    return result
+    with eng.begin() as conn:
+        stmt = select(notes).where(notes.c.filename.like(f"%{filename}%"))
+        rows = conn.execute(stmt).fetchall()
+        return [create_note_from_row(row) for row in rows]
 
 
 def search_by_keyword(eng: Engine, keyword: str, exact_match: bool = False) -> list[Note]:
@@ -264,21 +281,21 @@ def search_by_keyword(eng: Engine, keyword: str, exact_match: bool = False) -> l
     if not exact_match:
         keyword.replace("*", "")  # clean any wildcards
         keyword = f"{keyword}%"
-    conn = eng.connect()
-    stmt = make_search_statement("keywords", exact_match)
-    logger.debug(stmt)
-    rows = conn.execute(text(stmt), {"data": keyword}).fetchall()
-    result: list[Note] = []
-    for row in rows:
-        logger.debug(f"{row}")
-        # use body to populate the note
-        n: Note = Note.create_note_from_markdown(row[3])
-        # correct the filename and timestamp
-        n.filename = row[1]
-        n.timestamp = row[2]
-        logger.debug(f"{n}")
-        result.append(n)
-    return result
+    with engine.begin() as conn:
+        stmt = make_search_statement("keywords", exact_match)
+        logger.debug(stmt)
+        rows = conn.execute(text(stmt), {"data": keyword}).fetchall()
+        return [create_note_from_row(row) for row in rows]
+
+
+def count_notes(eng: Engine) -> int:
+    """
+    Returns the number of notes in the database.
+    """
+    with engine.begin() as conn:
+        stmt = select(func.count()).select_from(notes)
+        logger.debug(stmt)
+        return conn.execute(stmt).scalar()
 
 
 if __name__ == '__main__':
