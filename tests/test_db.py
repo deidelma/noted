@@ -113,6 +113,13 @@ def test_search_by_file(database_engine):
     add_note(database_engine, FAKE_NOTES[2])
     found: list[Note] = search_by_file(database_engine, "two")
     assert len(found) == 1
+    n = found[0]
+    assert n.filename == FAKE_NOTES[1].filename
+    assert n.keywords == FAKE_NOTES[1].keywords
+    assert n.present == FAKE_NOTES[1].present
+    assert n.speakers == FAKE_NOTES[1].speakers
+    assert n.body == FAKE_NOTES[1].body
+    assert n.page_header == FAKE_NOTES[1].page_header
     assert found[0].filename.endswith("note_two.md")
     found: list[Note] = search_by_file(database_engine, "tw")
     assert len(found) == 1
