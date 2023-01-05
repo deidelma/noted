@@ -17,10 +17,14 @@ from dotenv import load_dotenv
 from noted import utils
 
 load_dotenv()
+
 _PREFIX = "NOTED"
 debugging_mode_on = utils.to_boolean(os.environ.get(f"{_PREFIX}_DEBUG", False))
 if not debugging_mode_on:
     debugging_mode_on = utils.to_boolean(os.environ.get("DEBUG", False))
+
+if not debugging_mode_on:
+    debugging_mode_on = "--debug" in sys.argv
 
 logger = utils.create_logger(__name__, debugging_mode_on)
 
@@ -99,21 +103,6 @@ class Config(utils.SingletonClass):
             sys.exit(1)
 
         self.ensure_configuration_directory_exists()
-        # ensure configuration directory exists
-        # if not self.CONFIG_DIR_PATH.exists():
-        #     logger.debug("unable to find configuration directory: %s", self.CONFIG_DIR_PATH.as_posix())
-        #     try:
-        #         os.mkdir(self.CONFIG_DIR_PATH)
-        #         logger.debug("created configuration directory")
-        #     except FileExistsError:
-        #         logger.fatal(
-        #             "unexpected attempt to create configuration directory %s when it already exists",
-        #             config_dir,
-        #         )
-        #         sys.exit(1)
-        #     except Exception as e:  # pylint: disable=broad-except
-        #         logger.fatal("unexpected error while creating directory: \n%s", f"{e}")
-        #         sys.exit(1)
 
     def ensure_configuration_directory_exists(self) -> None:
         """Ensure that the standard configuration directory exists.
