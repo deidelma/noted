@@ -34,7 +34,7 @@ class Metadata(BaseModel):
     keywords: list[str] = []
     present: list[str] = []
     speakers: list[str] = []
-    timestamp: datetime = datetime.now
+    timestamp: datetime = datetime.now()
 
 
 KEYWORD_PATTERN = re.compile(r"^<\?.*keywords?:(.*)\?>$")
@@ -49,7 +49,8 @@ def extract_match(match: re.Match[str]) -> list[str]:
 
 def parse_filename(filename: str) -> tuple[str, str, str]:
     """
-    Extract the components of a filepath, assumed to be in the form: prefix-20220201-postfix
+    Extract the components of a filepath, assumed to be
+    in the form: prefix-20220201-postfix
 
     Args:
         filename (str): The filepath to be parsed.
@@ -93,14 +94,15 @@ class Section:
 class Note:
     """Data representation of the note currently being edited."""
 
-    def __init__(self,
-                 page_header: str,
-                 filename: str = "",
-                 keywords: list[str] | None = None,
-                 present: list[str] | None = None,
-                 speakers: list[str] | None = None,
-                 timestamp: datetime = datetime.now(),
-                 ) -> None:
+    def __init__(
+        self,
+        page_header: str,
+        filename: str = "",
+        keywords: list[str] | None = None,
+        present: list[str] | None = None,
+        speakers: list[str] | None = None,
+        timestamp: datetime = datetime.now(),
+    ) -> None:
         self.page_header = page_header
         if filename:
             self.filename = filename
@@ -112,18 +114,9 @@ class Note:
                 self.date
             ) = f"{today_date.year:4}{today_date.month:02}{today_date.day:02}"
             self.filename = f"{date_str}"
-        if keywords:
-            self.keywords = keywords
-        else:
-            self.keywords: list[str] = []
-        if present:
-            self.present = present
-        else:
-            self.present: list[str] = []
-        if speakers:
-            self.speakers = speakers
-        else:
-            self.speakers: list[str] = []
+        self.keywords = keywords if keywords else []
+        self.present = present if present else []
+        self.speakers = speakers if speakers else []
 
         self.timestamp = timestamp
 
@@ -132,7 +125,8 @@ class Note:
 
     def __repr__(self) -> str:
         len_keywords = len(self.keywords) if self.keywords is not None else 0
-        return f"Note:{self.filename} {self.timestamp} {len(self.body)} chars {len_keywords} keywords"
+        note_str = f"Note:{self.filename} {self.timestamp} {len(self.body)} chars "
+        return f"{note_str} {len_keywords} keywords"
 
     @property
     def body(self) -> str:
@@ -192,7 +186,7 @@ class Note:
     def from_markdown(self, markdown: str) -> None:
         """
         Attempts to parse the provided markdown data, which must be in
-        dred specific format.  Replaces the current values in this
+        noted specific format.  Replaces the current values in this
         note.
 
         Args:
@@ -218,7 +212,7 @@ class Note:
         self.body = other.body
 
     def write_file(
-            self, filename: str | Path | None = None, overwrite: bool = False
+        self, filename: str | Path | None = None, overwrite: bool = False
     ) -> None:
         """
         Write file to disc using provided fully qualified< filename.
@@ -256,7 +250,8 @@ class Note:
 
         First line should be a level 1 title: e.g., '# something'
         Metadata should follow: e.g., <? keywords: a, b, c ?>
-        All sections follow the metadata. Each is preceded by a level 2 title: e.g., '## a title'
+        All sections follow the metadata. 
+        Each is preceded by a level 2 title: e.g., '## a title'
 
         Args:
             markdown: the Markdown text to be parsed

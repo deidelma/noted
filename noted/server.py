@@ -12,7 +12,7 @@ from functools import partial
 from json import dumps
 from pathlib import Path
 
-from bottle import Bottle, static_file, request, jinja2_view, response
+from bottle import Bottle, static_file, request, jinja2_view, response, redirect
 
 import noted.settings as settings
 from noted.db import search_by_file, connect_to_database, find_all_notes, search_by_keyword
@@ -208,6 +208,23 @@ def terminate() -> dict[str, bool]:
     t.start()
     return dict(config_found=CONFIG_FILE_EXISTS)
 
+
+@app.route("/config")
+@view("config.html")
+def config() -> dict[str, bool]:
+    logger.info("moving to preferences page")
+    return dict(config_found=CONFIG_FILE_EXISTS,
+                notes_path=project_settings.notes_path,
+                database_path=project_settings.database_path)
+
+@app.route("/preferences")
+def preferences() -> dict[str, bool]:
+    decoded = request.params.decode(encoding='utf-8')
+    notes_path = decoded['notesPath']
+    logger.debug("new notes path: %s", notes_path)
+    database_path = decoded['databasePath']
+    logger.debug("new database path: %s", database_path)
+    return redirect("/config") # <-- need to create acceptance page
 
 ###############################################################
 # API ROUTES

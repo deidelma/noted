@@ -1,0 +1,40 @@
+{% extends "base.html" %} {% block title %}Main Page{% endblock %}
+{% block content %}
+{% if config_found == False %}
+<script xmlns="http://www.w3.org/1999/html">
+    window.addEventListener("load", function () {
+        window.location.replace(`${SERVER_URL}/noconfig`)
+    });
+</script>
+{% endif %}
+
+<h2>Preferences</h2>
+<!--{-->
+<!--    "notes_path": "C:/Users/David/OneDrive - McGill University/rawnotes", -->
+<!--    "backup_path": "C:/Users/David/OneDrive - McGill University/rawnotes",-->
+<!--    "database_path": "C:/Users/David/OneDrive - McGill University/rawnotes/noted.sqlite3",-->
+<!--    "initialized": true,-->
+<!--    "version": "0.3.0",-->
+<!--    "autosave": true,-->
+<!--    "use_gui": false-->
+<!--}-->
+<div>
+    <form action="/preferences">
+        <div class="form-group">
+            <label for="notesPath" id="notesPathLabel">Notes Directory Path</label>
+            <input type="text" class="form-control" id="notesPath" name="notesPath" value="{{ notes_path }}">
+            <small id="notesPathHelp" class="form-text text-muted">Required. Should be in the form: /root/path </small>
+        </div>
+        <div class="form-group">
+            <label for="databasePath">Database Path</label>
+            <input type="text" class="form-control" id="databasePath" name="databasePath" value="{{ database_path }}">
+            <small id="databasePathHelp" class="form-text text-muted">Required. Should be in the form: /root/path/noted.sqlite3 </small>
+        </div>
+        <input type="submit" value="Submit">
+        <input type="reset" value = "Cancel">
+    </form>
+
+</div>
+<div>
+</div>
+{%  endblock %}
