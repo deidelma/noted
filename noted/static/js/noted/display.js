@@ -17,6 +17,7 @@ const create_editor = (elementName) => {
         autoClosingQuotes: "beforeWhitespace",
         autoClosingBrackets: "beforeWhitespace",
         suggestSelection: "recentlyUsed",
+        automaticLayout: "true",
     });
     require(["MonacoMarkdown"], function (MonacoMarkdown) {
         const extension = new MonacoMarkdown.MonacoMarkdownExtension();
