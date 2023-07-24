@@ -27,6 +27,7 @@ go.work
 node_modules/
 
 # python
+.mypy_cache
 __pycache__/
 noted/__pycache__/
 venv/
@@ -45,3 +46,4 @@ noted.egg-info/
 /tests/mock.sqbpro
 /tests/.pytest_cache
 
+/target

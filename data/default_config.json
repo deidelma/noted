@@ -1,0 +1,8 @@
+
+{"notes_path": "data/noted",
+ "backup_path": "data/noted", 
+"database_path": "data/noted/noted.sqlite3", 
+"initialized": true, 
+"version": "0.3.1", 
+"autosave": true, 
+"use_gui": false}
