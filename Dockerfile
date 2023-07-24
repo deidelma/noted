@@ -14,6 +14,8 @@ RUN python -m pip install -r requirements.txt
 WORKDIR /app
 COPY . /app
 
+RUN apt-get update && apt-get install git -y
+
 RUN mkdir -p ~/.config/noted 
 RUN cp /app/data/default_config.json ~/.config/noted
 
