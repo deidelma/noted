@@ -28,16 +28,15 @@ notedserver = "noted.app:serve"
 noted = "noted.app:run"
 
 
-[tools.setuptools]
-packages=["noted"]
+packages = "noted"
 
-classifiers = [
-    "License :: MIT",
+classifiers = """
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Program Language :: Python :: 3 :: Only"
-]
-authors= ["David Eidelman"]
-license="MIT"
-license-file="LICENSE.txt"
+    "Programming Language :: Python :: 3 :: Only"
+"""
+authors = "David Eidelman"
+license = "MIT"
+license-file = "LICENSE.txt"
 
 

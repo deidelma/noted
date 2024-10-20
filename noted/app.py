@@ -1,12 +1,15 @@
 """External entry point for the noted package"""
-import webbrowser
+
+import sys
 import time
+import webbrowser
 from signal import SIGINT, signal
+
 from noted.server import (
-    launch_server,
     SERVER_URL,
-    stop_server,
+    launch_server,
     remove_crap,
+    stop_server,
     update_database_before_exiting,
 )
 from noted.utils import create_logger
@@ -22,7 +25,7 @@ def interrupt_handler(signal_number, frame) -> None:
     logger.info("updating database")
     update_database_before_exiting()
     logger.info("shutdown complete")
-    exit(0)
+    sys.exit(0)
 
 
 signal(SIGINT, interrupt_handler)

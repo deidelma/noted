@@ -47,3 +47,8 @@ noted.egg-info/
 /tests/.pytest_cache
 
 /target
+/dist 
+/build 
+
+.DS_Store
+*.DS_Store

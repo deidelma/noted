@@ -3,6 +3,7 @@
 import logging
 import sys
 from typing import Any
+from pathlib import Path
 
 
 class SingletonClass(object):
@@ -57,5 +58,11 @@ def to_boolean(value: Any) -> bool:
     else:
         raise ValueError(f"unable to convert object {repr(value)} to boolean")
 
+def resource_path(relative_path: Path) -> Path:
+    try:
+        base_path = Path(sys._MEIPASS) # type: ignore
+    except Exception:
+        base_path = Path(".")
 
+    return base_path.joinpath(relative_path)
 
